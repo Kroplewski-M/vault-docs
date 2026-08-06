@@ -1,12 +1,11 @@
+use app::{App, shell};
 
-#[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
     use axum::Router;
     use leptos::logging::log;
     use leptos::prelude::*;
-    use leptos_axum::{generate_route_list, LeptosRoutes};
-    use vault_docs::app::*;
+    use leptos_axum::{LeptosRoutes, generate_route_list};
 
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
@@ -15,7 +14,7 @@ async fn main() {
     let routes = generate_route_list(App);
 
     let app = Router::new()
-        .leptos_routes(&leptos_options, routes, {
+        .leptos_routes_with_context(&leptos_options, routes, || {}, {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
         })
@@ -29,11 +28,4 @@ async fn main() {
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
-}
-
-#[cfg(not(feature = "ssr"))]
-pub fn main() {
-    // no client-side main function
-    // unless we want this to work with e.g., Trunk for pure client-side testing
-    // see lib.rs for hydration function instead
 }

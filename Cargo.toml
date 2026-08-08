@@ -22,7 +22,6 @@ site-addr = "127.0.0.1:3000"
 reload-port = 3001
 end2end-cmd = "npx playwright test"
 end2end-dir = "end2end"
-env = "DEV"
 bin-features = []
 bin-default-features = false
 lib-features = []

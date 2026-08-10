@@ -40,5 +40,8 @@ jobs:
       - name: Run tests
         run: cargo leptos test
 
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+        run: docker build -t ghcr.io/${IMAGE_NAME}:${{ github.sha }} .

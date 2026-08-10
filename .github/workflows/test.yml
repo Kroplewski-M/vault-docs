@@ -1,0 +1,47 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install cargo-leptos
+        run: cargo install cargo-leptos
+
+      - name: Install Playwright deps
+        run: |
+          cd end2end
+          npm install
+          npx playwright install --with-deps
+
+      - name: Build
+        run: cargo leptos build --release
+
+      - name: Run tests
+        run: cargo leptos test
+
+      - name: Set image name
+        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+
+      - name: Build Docker image
+        run: docker build -t ghcr.io/${IMAGE_NAME}:${{ github.sha }} .

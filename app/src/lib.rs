@@ -35,12 +35,18 @@ pub fn App() -> impl IntoView {
         // sets the document title
         <Title text="Welcome to Leptos" />
         // content for this welcome page
+        <nav class="nav"></nav>
         <Router>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
-                    <Route path=path!("/") view=|| view! { <p>"hello"</p> } />
+                    <Route path=path!("/") view=Test />
                 </Routes>
             </main>
         </Router>
     }
+}
+
+#[component]
+pub fn Test() -> impl IntoView {
+    view! { <p>hello</p> }
 }

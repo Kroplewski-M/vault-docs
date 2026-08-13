@@ -4,5 +4,5 @@ test("homepage has title and heading text", async ({ page }) => {
   await page.goto("http://localhost:3000/");
 
 
-  await expect(page.locator("p")).toHaveText("hello");
+  await expect(page.locator("span")).toHaveText("Vault Docs");
 });

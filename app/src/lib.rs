@@ -5,6 +5,10 @@ use leptos_router::{
     path,
 };
 
+use crate::{components::navbar::Navbar, page::home::Home};
+pub mod components;
+pub mod page;
+
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
@@ -33,20 +37,15 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/vault-docs.css" />
 
         // sets the document title
-        <Title text="Welcome to Leptos" />
+        <Title text="Vault Docs" />
         // content for this welcome page
-        <nav class="nav"></nav>
+        <Navbar />
         <Router>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
-                    <Route path=path!("/") view=Test />
+                    <Route path=path!("/") view=Home />
                 </Routes>
             </main>
         </Router>
     }
-}
-
-#[component]
-pub fn Test() -> impl IntoView {
-    view! { <p>hello</p> }
 }

@@ -27,8 +27,38 @@ body {
   color: $text-primary;
 }
 
+$nav-height: 100px;
+
 nav {
   background-color: $brand-deep;
   width: 100vw;
-  height: 100px;
+  height: $nav-height;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 100%;
+  text-decoration: none;
+
+  img {
+    height: 80%;
+    width: auto;
+  }
+
+  span {
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: 0.02em;
+    color: $text-primary;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .logo {
+    span {
+      display: none;
+    }
+  }
 }

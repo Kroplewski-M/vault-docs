@@ -20,6 +20,11 @@ $warning: #E8A33D;
 $danger: #FF6B5B;
 $info: #6BA8E8;
 
+// Type
+$font-heading: 'Space Grotesk', sans-serif; // h1-h3, logo wordmark
+$font-body: 'Inter', sans-serif; // paragraphs, UI text
+$font-mono: 'JetBrains Mono', monospace; // timestamps, file sizes, hashes
+
 
 @media screen and (max-width: 400px) {
   .logo {
@@ -35,6 +40,11 @@ body {
   background-color: $surface-base;
   margin: 0;
   color: $text-primary;
+  font-family: $font-body;
+}
+
+h1, h2, h3, h4 {
+  font-family: $font-heading;
 }
 
 $nav-height: 100px;
@@ -58,6 +68,7 @@ nav {
   }
 
   span {
+    font-family: $font-heading;
     font-weight: 700;
     font-size: 25px;
     letter-spacing: 0.02em;

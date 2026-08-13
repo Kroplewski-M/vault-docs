@@ -1,1 +1,64 @@
+// Brand
+$brand-deep: #78131F; // fills only — buttons, badges, logo mark
+$brand-bright: #E46776; // 5.0:1 on surface-base — links, icons, focus rings
+$brand-tint: rgba(120, 19, 31, 0.18); // selected-row wash
 
+// Elevation (deepest → highest)
+$surface-sunken: #1A1A1A; // page canvas, table gutters
+$surface-base: #222222; // default panel
+$surface-raised: #2B2A2A; // cards, file rows
+$surface-overlay: #363434; // modals, dropdowns, hover
+
+// Text
+$text-primary: #FFE3DC; // 13.1:1
+$text-secondary: #D5BBB5; //  8.8:1
+$text-muted: #9A8A86; //  4.6:1 — timestamps, file sizes
+$text-neutral: #EDEDEB; // document preview panes
+// Semantic
+$success: #56C08D;
+$warning: #E8A33D;
+$danger: #FF6B5B;
+$info: #6BA8E8;
+
+
+body {
+  background-color: $surface-base;
+  margin: 0;
+  color: $text-primary;
+}
+
+$nav-height: 100px;
+
+nav {
+  background-color: $brand-deep;
+  width: 100vw;
+  height: $nav-height;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 100%;
+  text-decoration: none;
+
+  img {
+    height: 80%;
+    width: auto;
+  }
+
+  span {
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: 0.02em;
+    color: $text-primary;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .logo {
+    span {
+      display: none;
+    }
+  }
+}

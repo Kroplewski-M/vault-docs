@@ -26,16 +26,6 @@ $font-body: 'Inter', sans-serif; // paragraphs, UI text
 $font-mono: 'JetBrains Mono', monospace; // timestamps, file sizes, hashes
 
 
-@media screen and (max-width: 400px) {
-  .logo {
-    span {
-      display: none;
-    }
-  }
-}
-
-
-
 body {
   background-color: $surface-base;
   margin: 0;
@@ -43,7 +33,10 @@ body {
   font-family: $font-body;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: $font-heading;
 }
 
@@ -61,6 +54,7 @@ nav {
   gap: 0.5rem;
   height: 100%;
   text-decoration: none;
+  max-width: 300px;
 
   img {
     height: 80%;
@@ -147,6 +141,16 @@ main {
       font-size: 0.9rem;
       line-height: 1.5;
       color: $text-muted;
+    }
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .logo {
+    max-width: 50px;
+
+    span {
+      display: none;
     }
   }
 }

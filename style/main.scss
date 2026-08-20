@@ -149,6 +149,11 @@ main {
   .logo {
     max-width: 50px;
 
+    img {
+      height: auto;
+      width: 100%;
+    }
+
     span {
       display: none;
     }

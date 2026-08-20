@@ -1,4 +1,9 @@
 use app::{App, shell};
+use axum::routing::get;
+
+use crate::routes::health::health;
+
+pub mod routes;
 
 #[tokio::main]
 async fn main() {
@@ -14,6 +19,7 @@ async fn main() {
     let routes = generate_route_list(App);
 
     let app = Router::new()
+        .route("/healthz", get(health))
         .leptos_routes_with_context(&leptos_options, routes, || {}, {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())

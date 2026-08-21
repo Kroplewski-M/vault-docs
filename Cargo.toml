@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["app", "frontend", "server"]
+members = ["app", "domain", "frontend", "server"]
+
+
+[workspace.dependencies]
+uuid = { version = "1.24.1", features = ["v4", "rng-rand"] }
+chrono = { version = "0.4.45", features = ["std"] }
 
 # Defines a size-optimized profile for the WASM bundle in release mode
 [profile.wasm-release]

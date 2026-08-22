@@ -5,7 +5,10 @@ use leptos_router::{
     path,
 };
 
-use crate::{components::navbar::Navbar, page::home::Home};
+use crate::{
+    components::navbar::Navbar,
+    page::{home::Home, vault::Vault},
+};
 pub mod components;
 pub mod page;
 
@@ -50,6 +53,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=path!("/") view=Home />
+                    <Route path=path!("/vault") view=Vault />
                 </Routes>
             </main>
         </Router>

@@ -4,10 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+domain = { path = "../domain" }
 leptos = "0.8.20"
 leptos_meta = "0.8.6"
 leptos_router = "0.8.15"
 leptos_axum = { version = "0.8.10", optional = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
 
 [features]
 hydrate = ["leptos/hydrate"]

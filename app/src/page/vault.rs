@@ -1,6 +1,7 @@
 use chrono::Utc;
 use domain::models::File;
 use leptos::prelude::*;
+use leptos_meta::Title;
 
 use crate::components::{file_card::FileCard, svg::empty_files::EmptyFilesIcon};
 
@@ -10,6 +11,7 @@ pub fn Vault() -> impl IntoView {
     let has_files = !files.is_empty();
     //let files = Vec::<File>::new();
     view! {
+        <Title formatter=|text| format!("{text} - My Vault") />
         <h1>"My Vault"</h1>
         <Show when= move|| {has_files} fallback=EmptyFiles>
             {

@@ -2,16 +2,20 @@ use chrono::Utc;
 use domain::models::File;
 use leptos::prelude::*;
 
-use crate::components::svg::empty_files::EmptyFilesIcon;
+use crate::components::{file_card::FileCard, svg::empty_files::EmptyFilesIcon};
 
 #[component]
 pub fn Vault() -> impl IntoView {
-    //let files = populate_files();
-    let files = Vec::<File>::new();
+    let files = populate_files();
+    let has_files = !files.is_empty();
+    //let files = Vec::<File>::new();
     view! {
         <h1>"My Vault"</h1>
-        <Show when= move|| {!files.is_empty()} fallback=EmptyFiles>
-            <p>"file"</p>
+        <Show when= move|| {has_files} fallback=EmptyFiles>
+            {
+                files.iter().cloned()
+                .map(|f| view!{<FileCard file=f/>}).collect_view()
+            }
         </Show>
     }
 }

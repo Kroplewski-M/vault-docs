@@ -1,6 +1,7 @@
 use chrono::Utc;
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct File {
     pub id: Uuid,
     pub name: String,

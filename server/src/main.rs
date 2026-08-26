@@ -1,24 +1,24 @@
 use app::{App, shell};
 use axum::routing::get;
 
-use crate::routes::health::health;
+use crate::{config::Config, routes::health::health};
 
+pub mod config;
 pub mod routes;
 
 #[tokio::main]
 async fn main() {
     use axum::Router;
     use leptos::logging::log;
-    use leptos::prelude::*;
     use leptos_axum::{LeptosRoutes, generate_route_list};
 
     dotenvy::dotenv().ok();
 
-    let conf = get_configuration(None).unwrap();
-    let addr = conf.leptos_options.site_addr;
-    let leptos_options = conf.leptos_options;
-    let url = std::env::var("DATABASE_URL").unwrap();
-    let pool = db::init_pool(url.as_str())
+    let config = Config::init();
+    let leptos_options = config.leptos_options;
+    let addr = leptos_options.site_addr;
+
+    let pool = db::init_pool(config.database_url.as_str())
         .await
         .expect("failed to connect to db");
 

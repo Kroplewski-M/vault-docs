@@ -2269,6 +2269,7 @@ dependencies = [
  "app",
  "axum",
  "db",
+ "domain",
  "dotenvy",
  "leptos",
  "leptos_axum",

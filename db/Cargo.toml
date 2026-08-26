@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 sqlx = { version = "0.9.0", features = [
-  "tls-native-tls",
+  "tls-rustls",
   "runtime-tokio",
   "postgres",
   "chrono",

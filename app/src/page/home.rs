@@ -18,7 +18,7 @@ pub fn Home() -> impl IntoView {
                 "again in seconds with AI-powered semantic search."
             </p>
             <a href="/" class="button-default">
-                "Create An Account Now"
+                "Login now"
             </a>
         </section>
 

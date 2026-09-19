@@ -3,8 +3,9 @@ use axum::routing::get;
 
 use crate::{config::Config, routes::health::health};
 
-pub mod config;
-pub mod routes;
+mod config;
+mod routes;
+mod state;
 
 #[tokio::main]
 async fn main() {

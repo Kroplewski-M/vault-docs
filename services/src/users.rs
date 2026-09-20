@@ -12,7 +12,10 @@ impl UserService {
     pub fn new(repo: UserRepo) -> Self {
         Self { repo }
     }
-    pub async fn upsert_from_sign_in(&self, id: Uuid, email: &str) -> Result<()> {
-        self.repo.upsert(id, email).await.map_err(internal)
+    pub async fn create_user_if_missing(&self, id: Uuid, email: &str) -> Result<()> {
+        self.repo
+            .create_user_if_missing(id, email)
+            .await
+            .map_err(internal)
     }
 }

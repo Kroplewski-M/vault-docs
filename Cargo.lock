@@ -89,6 +89,7 @@ dependencies = [
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
+ "services",
  "uuid",
 ]
 
@@ -3208,6 +3209,8 @@ dependencies = [
  "openidconnect",
  "serde",
  "serde_json",
+ "services",
+ "time",
  "tokio",
  "url",
  "uuid",
@@ -3276,6 +3279,15 @@ checksum = "63eb08f80db903d3c42f64e60ebb3875e0305be502bdc064ec0a0eab42207f00"
 dependencies = [
  "server_fn_macro",
  "syn 2.0.119",
+]
+
+[[package]]
+name = "services"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "db",
+ "uuid",
 ]
 
 [[package]]

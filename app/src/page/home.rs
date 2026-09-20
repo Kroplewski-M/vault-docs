@@ -17,7 +17,7 @@ pub fn Home() -> impl IntoView {
                 "with its own encryption key, stored in encrypted object storage, and found "
                 "again in seconds with AI-powered semantic search."
             </p>
-            <a href="/" class="button-default">
+            <a href="/auth/login" rel="external" class="button-default">
                 "Login now"
             </a>
         </section>

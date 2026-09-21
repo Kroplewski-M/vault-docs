@@ -14,6 +14,20 @@ use crate::{auth::LoginFlow, state::AppState};
 const FLOW_COOKIE: &str = "oidc_flow";
 const SESSION_COOKIE: &str = "session";
 
+// The full flow, tying `AuthService` (server/src/auth.rs) to HTTP:
+//   GET /auth/login    -> login()    -> redirect to Cognito's hosted UI
+//   GET /auth/callback -> callback() -> Cognito redirects back here
+//   POST /auth/logout  -> logout()   -> redirect to Cognito's hosted logout
+//
+// `PrivateCookieJar` encrypts+signs cookies (using AppState's cookie `Key`),
+// so the CSRF token/nonce/PKCE verifier in `oidc_flow` can't be read or
+// tampered with by the browser or a man-in-the-middle between login and
+// callback.
+
+/// Starts a login: generates the OIDC flow secrets (see `AuthService::begin_login`
+/// for what csrf/nonce/PKCE mean), stashes them in a short-lived cookie so
+/// `callback` can verify them, and sends the browser to Cognito's hosted
+/// login page.
 pub async fn login(
     State(state): State<AppState>,
     jar: PrivateCookieJar,
@@ -32,6 +46,9 @@ pub async fn login(
     (jar.add(cookie), Redirect::to(url.as_str()))
 }
 
+/// The query params Cognito appends to the redirect back to us:
+/// `code` is the one-time authorization code to exchange for tokens;
+/// `state` is our CSRF token, echoed back unchanged.
 #[derive(Deserialize)]
 pub struct CallbackParams {
     code: String,
@@ -43,6 +60,11 @@ pub async fn callback(
     jar: PrivateCookieJar,
     Query(params): Query<CallbackParams>,
 ) -> Result<(PrivateCookieJar, Redirect), StatusCode> {
+    // Recover the flow secrets we stashed in `login`. If this cookie is
+    // missing/invalid we have no way to verify the callback at all (no csrf
+    // token to compare, no PKCE verifier, no nonce) — e.g. it expired, was
+    // never set, or someone hit this endpoint directly without going
+    // through /auth/login.
     let flow: LoginFlow = jar
         .get(FLOW_COOKIE)
         .and_then(|c| serde_json::from_str(c.value()).ok())

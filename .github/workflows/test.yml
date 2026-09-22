@@ -27,8 +27,17 @@ jobs:
           --health-retries 5
 
     env:
+      # Dummy secrets
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/vault_docs
-
+      COOKIE_KEY: 8f73644a-ff55-4542-888f-7d8e46253dce-893ccf6f-6e41-45c2-9eda-406e13db4d15
+      APP_ENV: development
+      COGNITO_REGION: eu-west-2
+      COGNITO_USER_POOL_ID: eu-west-2_test
+      AWS_COGNITO_CLIENT_ID: test-client-id
+      AWS_COGNITO_CLIENT_SECRET: test-client-secret
+      COGNITO_DOMAIN: https://test.auth.eu-west-2.amazoncognito.com
+      COGNITO_REDIRECT_URI: http://localhost:8080/auth/callback
+      COGNITO_LOGOUT_REDIRECT_URI: http://localhost:8080/
     steps:
       - uses: actions/checkout@v3
 

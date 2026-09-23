@@ -30,7 +30,6 @@ services:
   # Source is bind-mounted and cargo-leptos rebuilds on change
   server-dev:
     <<: *server
-    profiles: [dev]
     build:
       context: .
       target: dev

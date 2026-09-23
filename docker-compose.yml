@@ -1,3 +1,11 @@
+x-server: &server
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  depends_on:
+    db:
+      condition: service_healthy
+
 services:
   db:
     image: pgvector/pgvector:pg18
@@ -11,16 +19,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
   server:
+    <<: *server
+    profiles: [prod]
     build: .
-    env_file: .env
-    environment:
-      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     ports:
       - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
+
+  # Source is bind-mounted and cargo-leptos rebuilds on change
+  server-dev:
+    <<: *server
+    profiles: [dev]
+    build:
+      context: .
+      target: dev
+    volumes:
+      - .:/work
+      # keep build artifacts and crate cache in volumes so rebuilds stay incremental
+      - target:/work/target
+      - cargo-registry:/usr/local/cargo/registry
+    ports:
+      - "8080:8080"
+      - "3001:3001"
 
 volumes:
   pgdata:
+  target:
+  cargo-registry:

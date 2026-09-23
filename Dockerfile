@@ -1,4 +1,4 @@
-FROM rust:1-alpine3.21 as builder
+FROM rust:1-alpine3.21 as base
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
@@ -13,6 +13,15 @@ RUN curl --proto '=https' --tlsv1.3 -LsSf https://github.com/leptos-rs/cargo-lep
 RUN rustup target add wasm32-unknown-unknown
 
 WORKDIR /work
+
+# Dev: source is bind-mounted, cargo-leptos rebuilds on change
+FROM base as dev
+ENV LEPTOS_SITE_ADDR="0.0.0.0:8080"
+ENV LEPTOS_RELOAD_PORT=3001
+EXPOSE 8080 3001
+CMD ["cargo", "leptos", "watch"]
+
+FROM base as builder
 COPY . .
 
 RUN cargo leptos build --release -vv

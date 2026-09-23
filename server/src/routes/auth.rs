@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{auth::LoginFlow, state::AppState};
 
 const FLOW_COOKIE: &str = "oidc_flow";
-const SESSION_COOKIE: &str = "session";
+pub const SESSION_COOKIE: &str = "session";
 
 // The full flow, tying `AuthService` (server/src/auth.rs) to HTTP:
 //   GET /auth/login    -> login()    -> redirect to Cognito's hosted UI

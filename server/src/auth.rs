@@ -118,7 +118,7 @@ pub struct AuthService {
     http: reqwest::Client,
     cognito: CognitoConfig,
     users: UserService,
-    sessions: SessionService,
+    pub sessions: SessionService,
 }
 
 impl AuthService {

@@ -17,3 +17,8 @@ pub struct User {
     pub id: Uuid,
     pub email: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CurrentUser {
+    pub id: Uuid,
+}

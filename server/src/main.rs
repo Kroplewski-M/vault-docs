@@ -16,6 +16,7 @@ use crate::{
 
 mod auth;
 mod config;
+mod middleware;
 mod routes;
 mod state;
 
@@ -38,8 +39,8 @@ async fn main() {
     db::migrate(&pool).await.expect("failed to run migrations");
 
     let users = UserService::new(UserRepo::new(pool.clone()));
-    let sessions = SessionService::new(SessionRepo::new(pool)); // pool stops here
-    let auth = AuthService::new(&config.cognito, users, sessions.clone()).await;
+    let session = SessionService::new(SessionRepo::new(pool)); // pool stops here
+    let auth = AuthService::new(&config.cognito, users, session.clone()).await;
 
     let state = AppState { config, auth };
 
@@ -54,9 +55,13 @@ async fn main() {
         .leptos_routes_with_context(
             &state,
             routes,
-            move || provide_context(sessions.clone()),
+            move || provide_context(session.clone()),
             move || shell(leptos_options.clone()),
         )
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            middleware::session,
+        ))
         .fallback(leptos_axum::file_and_error_handler::<AppState, _>(shell))
         .with_state(state);
 

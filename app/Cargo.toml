@@ -12,6 +12,7 @@ leptos_axum = { version = "0.8.10", optional = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 services = { path = "../services", optional = true }
+axum = { version = "0.8.9", optional = true }
 
 [features]
 hydrate = ["leptos/hydrate"]
@@ -21,4 +22,5 @@ ssr = [
   "leptos_router/ssr",
   "dep:leptos_axum",
   "dep:services",
+  "dep:axum",
 ]

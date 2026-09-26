@@ -1,5 +1,5 @@
 use chrono::{Duration, Utc};
-use db::sessions::SessionRepo;
+use db::sessions::{SessionRepo, SessionRepoTrait};
 use uuid::Uuid;
 
 use crate::{Result, error::internal};
@@ -26,11 +26,11 @@ impl SessionService {
     }
     pub async fn user_id_for_session(&self, session_id: Uuid) -> Result<Option<Uuid>> {
         self.repo
-            .user_id_for_session(session_id)
+            .user_id_for_session(&session_id)
             .await
             .map_err(internal)
     }
     pub async fn delete(&self, session_id: Uuid) -> Result<()> {
-        self.repo.delete(session_id).await.map_err(internal)
+        self.repo.delete(&session_id).await.map_err(internal)
     }
 }

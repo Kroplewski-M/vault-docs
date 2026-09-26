@@ -7,5 +7,6 @@ edition = "2024"
 sqlx = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
+async-trait = "0.1.92"
 pgvector = { version = "0.4.2", features = ["sqlx"] }
 domain = { path = "../domain", features = ["sqlx"] }

@@ -1,4 +1,4 @@
-use db::users::UserRepo;
+use db::users::{UserRepo, UserRepoTrait};
 use uuid::Uuid;
 
 use crate::error::{Result, internal};

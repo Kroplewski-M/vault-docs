@@ -15,7 +15,7 @@ pub fn Navbar() -> impl IntoView {
         <Transition fallback=|| ()>
                 {move || Suspend::new(async move {
                     match user.await {
-                        Ok(Some(_u)) => view! { <a href="/profile" class="profileIcon"><UserIcon class="profileSvg"/></a> }.into_any(),
+                        Ok(Some(_u)) => view! { <a href="/profile" class="profileIcon" aria-label="Profile"><UserIcon class="profileSvg"/></a> }.into_any(),
                         _ => view!{""}.into_any(),
                     }
                 })}

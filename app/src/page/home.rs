@@ -1,12 +1,14 @@
 use leptos::prelude::*;
 use leptos_meta::Title;
 
-use crate::components::svg::{
-    folder::FolderIcon, key::KeyIcon, lock::LockIcon, search::SearchIcon,
+use crate::{
+    UserResource,
+    components::svg::{folder::FolderIcon, key::KeyIcon, lock::LockIcon, search::SearchIcon},
 };
 
 #[component]
 pub fn Home() -> impl IntoView {
+    let user = expect_context::<UserResource>();
     view! {
         <Title formatter=|text| format!("{text} - Home") />
         <section class="hero">
@@ -17,9 +19,18 @@ pub fn Home() -> impl IntoView {
                 "with its own encryption key, stored in encrypted object storage, and found "
                 "again in seconds with AI-powered semantic search."
             </p>
-            <a href="/auth/login" rel="external" class="button-default">
-                "Login now"
-            </a>
+            <Transition fallback=|| ()>
+                {move || Suspend::new(async move {
+                    match user.await {
+                        Ok(Some(_)) => view! { <a href="/vault" class="button-default">
+                            "Go to vault"
+                        </a>  }.into_any(),
+                        _ => view! { <a href="/auth/login" rel="external" class="button-default">
+                            "Login now"
+                        </a> }.into_any(),
+                    }
+                })}
+            </Transition>
         </section>
 
         <section class="features">

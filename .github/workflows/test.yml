@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  build-and-deploy:
+  build-and-run:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -86,8 +86,22 @@ jobs:
       - name: Run e2e tests
         run: cargo leptos end-to-end --release
 
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set image name
         run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker image
-        run: docker build -t ghcr.io/${IMAGE_NAME}:${{ github.sha }} .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

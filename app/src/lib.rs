@@ -8,7 +8,7 @@ use leptos_router::{
 
 use crate::{
     components::navbar::Navbar,
-    page::{home::Home, vault::Vault},
+    page::{home::Home, profile::Profile, vault::Vault},
 };
 pub mod components;
 pub mod page;
@@ -43,11 +43,14 @@ pub async fn get_current_user() -> Result<Option<CurrentUser>, ServerFnError> {
     let user = leptos_axum::extract::<Option<Extension<CurrentUser>>>().await?;
     Ok(user.map(|Extension(u)| u))
 }
+
+pub type UserResource = Resource<Result<Option<CurrentUser>, ServerFnError>>;
 #[component]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
     let user = Resource::new(|| (), |_| get_current_user());
+    provide_context(user);
     view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
@@ -66,6 +69,7 @@ pub fn App() -> impl IntoView {
                     condition=move || user.get().map(|r| matches!(r, Ok(Some(_))))
                     redirect_path=|| "/">
                         <Route path=path!("/vault") view=Vault />
+                        <Route path=path!("/profile") view=Profile />
                     </ProtectedParentRoute>
                 </Routes>
             </main>

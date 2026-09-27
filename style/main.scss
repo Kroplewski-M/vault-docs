@@ -46,6 +46,22 @@ nav {
   background-color: $brand-deep;
   width: 100vw;
   height: $nav-height;
+  display: flex;
+  justify-content: space-between;
+}
+
+.profileIcon {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  max-width: 300px;
+  color: white;
+  text-decoration: none;
+}
+
+.profileSvg {
+  height: 60%;
+  width: auto;
 }
 
 .logo {
@@ -94,21 +110,24 @@ main {
     font-size: 1.05rem;
     line-height: 1.6;
   }
+}
 
-  .button-default {
-    display: inline-block;
-    padding: 0.75rem 1.75rem;
-    border-radius: 6px;
-    background-color: $brand-deep;
-    color: $text-primary;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 0.15s ease;
+.button-default {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  border: none;
+  border-radius: 6px;
+  background-color: $brand-deep;
+  color: $text-primary;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 
-    &:hover {
-      background-color: $brand-bright;
-      color: $surface-sunken;
-    }
+  &:hover {
+    background-color: $brand-bright;
+    color: $surface-sunken;
   }
 }
 

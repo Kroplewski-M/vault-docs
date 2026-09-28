@@ -1,10 +1,9 @@
 use leptos::prelude::*;
 use services::users::UserService;
 
-use crate::get_current_user;
-
 #[server]
 async fn get_user_email() -> Result<Option<String>, ServerFnError> {
+    use crate::get_current_user;
     let user = get_current_user().await;
 
     let user_service = expect_context::<UserService>();
@@ -24,7 +23,10 @@ pub fn Profile() -> impl IntoView {
         <form method="post" action="/auth/logout">
             <Transition fallback=|| ()>
                 {move || Suspend::new(async move {
-                    user.await.ok().flatten().map(|email| view! { <p>"Email: "{email}</p> })
+                    match user.await {
+                        Ok(email) => view! { <p>"Email: "{email}</p> }.into_any(),
+                        Err(_) => view! { <p>"error fetching email"</p> }.into_any(),
+                    }
                 })}
             </Transition>
             <button type="submit" class="button-default">

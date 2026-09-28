@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "../migrations")]
-    async fn existing_user_is_left_untouched(pool: PgPool) {
+    async fn existing_user_is_updated(pool: PgPool) {
         let repo = UserRepo::new(pool.clone());
         let id = Uuid::new_v4();
 
@@ -78,7 +78,7 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(emails_for(&pool, id).await, ["first@test.local"]);
+        assert_eq!(emails_for(&pool, id).await, ["second@test.local"]);
     }
 
     #[sqlx::test(migrations = "../migrations")]

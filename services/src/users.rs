@@ -18,4 +18,7 @@ impl UserService {
             .await
             .map_err(internal)
     }
+    pub async fn get_user_email(&self, id: Uuid) -> Result<Option<String>> {
+        self.repo.get_user_email(id).await.map_err(internal)
+    }
 }

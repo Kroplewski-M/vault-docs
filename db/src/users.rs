@@ -10,6 +10,7 @@ pub struct UserRepo {
 #[async_trait]
 pub trait UserRepoTrait: Send + Sync {
     async fn create_user_if_missing(&self, id: Uuid, email: &str) -> sqlx::Result<()>;
+    async fn get_user_email(&self, id: Uuid) -> sqlx::Result<Option<String>>;
 }
 
 impl UserRepo {
@@ -27,6 +28,12 @@ impl UserRepoTrait for UserRepo {
             .execute(&self.pool)
             .await?;
         Ok(())
+    }
+    async fn get_user_email(&self, id: Uuid) -> sqlx::Result<Option<String>> {
+        sqlx::query_scalar("SELECT email::text FROM users WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
     }
 }
 

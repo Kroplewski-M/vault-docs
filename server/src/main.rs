@@ -40,7 +40,7 @@ async fn main() {
 
     let users = UserService::new(UserRepo::new(pool.clone()));
     let session = SessionService::new(SessionRepo::new(pool)); // pool stops here
-    let auth = AuthService::new(&config.cognito, users, session.clone()).await;
+    let auth = AuthService::new(&config.cognito, users.clone(), session.clone()).await;
 
     let state = AppState { config, auth };
 
@@ -55,7 +55,10 @@ async fn main() {
         .leptos_routes_with_context(
             &state,
             routes,
-            move || provide_context(session.clone()),
+            move || {
+                provide_context(session.clone());
+                provide_context(users.clone());
+            },
             move || shell(leptos_options.clone()),
         )
         .layer(axum::middleware::from_fn_with_state(

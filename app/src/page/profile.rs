@@ -1,9 +1,10 @@
 use leptos::prelude::*;
-use services::users::UserService;
 
 #[server]
 async fn get_user_email() -> Result<Option<String>, ServerFnError> {
     use crate::get_current_user;
+    use services::users::UserService;
+
     let user = get_current_user().await;
 
     let user_service = expect_context::<UserService>();

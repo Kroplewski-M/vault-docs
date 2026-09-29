@@ -44,15 +44,6 @@ impl UserRepoTrait for UserRepo {
 mod tests {
     use super::*;
 
-    // `email` is CITEXT, which sqlx won't decode into `String`, so cast it to text
-    async fn emails_for(pool: &PgPool, id: Uuid) -> Vec<String> {
-        sqlx::query_scalar("SELECT email::text FROM users WHERE id = $1")
-            .bind(id)
-            .fetch_all(pool)
-            .await
-            .unwrap()
-    }
-
     #[sqlx::test(migrations = "../migrations")]
     async fn creates_new_user(pool: PgPool) {
         let repo = UserRepo::new(pool.clone());
@@ -61,8 +52,8 @@ mod tests {
         repo.create_user_if_missing(id, "a@test.local")
             .await
             .unwrap();
-
-        assert_eq!(emails_for(&pool, id).await, ["a@test.local"]);
+        let user = repo.get_user_email(id).await.unwrap();
+        assert_eq!(user.unwrap(), "a@test.local");
     }
 
     #[sqlx::test(migrations = "../migrations")]
@@ -78,7 +69,8 @@ mod tests {
             .await
             .unwrap();
 
-        assert_eq!(emails_for(&pool, id).await, ["second@test.local"]);
+        let user = repo.get_user_email(id).await.unwrap();
+        assert_eq!(user.unwrap(), "second@test.local");
     }
 
     #[sqlx::test(migrations = "../migrations")]
@@ -100,5 +92,29 @@ mod tests {
                 .is_some_and(|e| e.is_unique_violation()),
             "expected unique violation, got {err:?}"
         );
+    }
+    #[sqlx::test(migrations = "../migrations")]
+    async fn get_user_email_returns_email(pool: PgPool) {
+        let repo = UserRepo::new(pool.clone());
+        let email = "test@test.local";
+        repo.create_user_if_missing(Uuid::new_v4(), email)
+            .await
+            .unwrap();
+
+        let user_id: Uuid = sqlx::query_scalar("SELECT id FROM users WHERE email = $1")
+            .bind(email)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+
+        let user_email = repo.get_user_email(user_id).await.unwrap();
+        assert_eq!(user_email.unwrap(), email);
+    }
+    #[sqlx::test(migrations = "../migrations")]
+    async fn get_user_email_returns_none(pool: PgPool) {
+        let repo = UserRepo::new(pool.clone());
+
+        let user_email = repo.get_user_email(Uuid::new_v4()).await.unwrap();
+        assert_eq!(user_email, None);
     }
 }

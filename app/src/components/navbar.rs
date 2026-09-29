@@ -1,8 +1,8 @@
 use leptos::prelude::*;
 
 use crate::{
-    UserResource,
     components::{logo::Logo, svg::user::UserIcon},
+    server_functions::user::UserResource,
 };
 
 #[component]
@@ -12,11 +12,18 @@ pub fn Navbar() -> impl IntoView {
     view! {
         <nav class="nav">
             <Logo />
-        <Transition fallback=|| ()>
+            <Transition fallback=|| ()>
                 {move || Suspend::new(async move {
                     match user.await {
-                        Ok(Some(_u)) => view! { <a href="/profile" class="profileIcon" aria-label="Profile"><UserIcon class="profileSvg"/></a> }.into_any(),
-                        _ => view!{""}.into_any(),
+                        Ok(Some(_u)) => {
+                            view! {
+                                <a href="/profile" class="profileIcon" aria-label="Profile">
+                                    <UserIcon class="profileSvg" />
+                                </a>
+                            }
+                                .into_any()
+                        }
+                        _ => view! { "" }.into_any(),
                     }
                 })}
             </Transition>

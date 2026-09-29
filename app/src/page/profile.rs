@@ -1,19 +1,5 @@
+use crate::server_functions::user::get_user_email;
 use leptos::prelude::*;
-
-#[server]
-async fn get_user_email() -> Result<Option<String>, ServerFnError> {
-    use crate::get_current_user;
-    use services::users::UserService;
-
-    let user = get_current_user().await;
-
-    let user_service = expect_context::<UserService>();
-    match user {
-        Ok(Some(user)) => Ok(user_service.get_user_email(user.id).await?),
-        Ok(None) => Ok(None),
-        Err(_) => Ok(None),
-    }
-}
 
 #[component]
 pub fn Profile() -> impl IntoView {

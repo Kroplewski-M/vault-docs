@@ -2,8 +2,8 @@ use leptos::prelude::*;
 use leptos_meta::Title;
 
 use crate::{
-    UserResource,
     components::svg::{folder::FolderIcon, key::KeyIcon, lock::LockIcon, search::SearchIcon},
+    server_functions::user::UserResource,
 };
 
 #[component]
@@ -22,12 +22,22 @@ pub fn Home() -> impl IntoView {
             <Transition fallback=|| ()>
                 {move || Suspend::new(async move {
                     match user.await {
-                        Ok(Some(_)) => view! { <a href="/vault" class="button-default">
-                            "Go to vault"
-                        </a>  }.into_any(),
-                        _ => view! { <a href="/auth/login" rel="external" class="button-default">
-                            "Login now"
-                        </a> }.into_any(),
+                        Ok(Some(_)) => {
+                            view! {
+                                <a href="/vault" class="button-default">
+                                    "Go to vault"
+                                </a>
+                            }
+                                .into_any()
+                        }
+                        _ => {
+                            view! {
+                                <a href="/auth/login" rel="external" class="button-default">
+                                    "Login now"
+                                </a>
+                            }
+                                .into_any()
+                        }
                     }
                 })}
             </Transition>

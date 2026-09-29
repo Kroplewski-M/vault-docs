@@ -7,3 +7,4 @@ edition = "2024"
 db = { path = "../db" }
 uuid = { workspace = true }
 chrono = { workspace = true }
+sqlx = { workspace = true }

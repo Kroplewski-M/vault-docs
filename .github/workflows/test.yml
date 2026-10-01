@@ -37,6 +37,8 @@ jobs:
       COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
       COGNITO_REDIRECT_URI: ${{ secrets.COGNITO_REDIRECT_URI }}
       COGNITO_LOGOUT_REDIRECT_URI: ${{ secrets.COGNITO_LOGOUT_REDIRECT_URI }}
+      TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+      TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
     steps:
       - uses: actions/checkout@v3
 

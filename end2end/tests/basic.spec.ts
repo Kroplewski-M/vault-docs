@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import path from "path";
+
 process.loadEnvFile("../.env");
 
 test("homepage has title and heading text", async ({ page }) => {

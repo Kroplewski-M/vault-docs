@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-process.loadEnvFile("../.env");
+//only load env if not running in CI
+if (!process.env.CI) process.loadEnvFile("../.env");
 
 test("homepage has title and heading text", async ({ page }) => {
   await page.goto("http://localhost:3000/");

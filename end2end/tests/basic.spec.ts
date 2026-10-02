@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 if (!process.env.CI) process.loadEnvFile("../.env");
 
 test("homepage has title and heading text", async ({ page }) => {
-  await page.goto("http://localhost:3000/");
+  await page.goto("http://localhost:8080/");
   await expect(page.locator("span")).toHaveText("Vault Docs");
 });
 
@@ -17,7 +17,7 @@ test("user can login through cognito", async ({ page }) => {
   if (password === undefined)
     throw ("password not set");
 
-  await page.goto("http://localhost:3000/");
+  await page.goto("http://localhost:8080/");
   await page.getByRole('link', { name: 'Login' }).click();
   await page.waitForURL(/amazoncognito\.com/);
   await page.locator('input[name="username"]').fill(email);

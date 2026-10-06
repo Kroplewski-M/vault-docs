@@ -1,68 +1,57 @@
-use chrono::Utc;
-use domain::models::File;
-use leptos::prelude::*;
+use leptos::{ev, prelude::*};
 use leptos_meta::Title;
-
-use crate::components::{file_card::FileCard, svg::empty_files::EmptyFilesIcon};
 
 #[component]
 pub fn Vault() -> impl IntoView {
-    let files = populate_files();
-    let has_files = !files.is_empty();
-    //let files = Vec::<File>::new();
+    // Counter, not a bool: dragenter/dragleave fire for every child element,
+    // so a bool would flicker as the cursor moves over the page.
+    let drag_depth = RwSignal::new(0i32);
+    let dropped = RwSignal::new(Vec::<String>::new());
+
+    // Effect = client-only, so this never runs during SSR
+    Effect::new(move |_| {
+        let enter = window_event_listener(ev::dragenter, move |e| {
+            e.prevent_default();
+            drag_depth.update(|d| *d += 1);
+        });
+        // Without preventDefault on dragover, the browser won't fire `drop`
+        // and will open the file in the tab instead.
+        let over = window_event_listener(ev::dragover, |e| e.prevent_default());
+        let leave = window_event_listener(ev::dragleave, move |_| {
+            drag_depth.update(|d| *d = (*d - 1).max(0));
+        });
+        let drop_h = window_event_listener(ev::drop, move |e| {
+            e.prevent_default();
+            drag_depth.set(0);
+            let Some(list) = e.data_transfer().and_then(|dt| dt.files()) else {
+                return;
+            };
+            let files: Vec<web_sys::File> =
+                (0..list.length()).filter_map(|i| list.get(i)).collect();
+            dropped.update(|d| d.extend(files.iter().map(|f| f.name())));
+            //upload file
+        });
+        on_cleanup(move || {
+            enter.remove();
+            over.remove();
+            leave.remove();
+            drop_h.remove();
+        });
+    });
     view! {
         <Title formatter=|text| format!("{text} - My Vault") />
         <h1>"My Vault"</h1>
-        <Show when= move|| {has_files} fallback=EmptyFiles>
-            {
-                files.iter().cloned()
-                .map(|f| view!{<FileCard file=f/>}).collect_view()
-            }
-        </Show>
-    }
-}
-#[component]
-fn EmptyFiles() -> impl IntoView {
-    view! {
-        <div class="empty-state">
-            <EmptyFilesIcon />
-            <p>"No files yet"</p>
+        <div class="drop-overlay" class:active=move || { drag_depth.get() > 0 }>
+            <div class="drop-overlay_box">
+                <p class="drop-overlay_title">"Drop files to upload"</p>
+                <p class="drop-overlay_hint">"Release anywhere on the page"</p>
+            </div>
         </div>
-    }
-}
-fn populate_files() -> Vec<File> {
-    let entries: [(&str, usize, &str, &str); 20] = [
-        ("file", 54_532, "pdf", "Mat"),
-        ("invoice", 128_450, "docx", "Mat"),
-        ("notes", 1_024, "txt", "Jane"),
-        ("report", 87_300, "odt", "Jane"),
-        ("contract", 210_880, "pdf", "Alex"),
-        ("resume", 45_120, "docx", "Mat"),
-        ("minutes", 3_072, "txt", "Jane"),
-        ("proposal", 152_640, "odt", "Alex"),
-        ("budget", 34_210, "pdf", "Mat"),
-        ("summary", 8_192, "txt", "Jane"),
-        ("agreement", 98_765, "docx", "Alex"),
-        ("draft", 12_500, "odt", "Mat"),
-        ("memo", 2_048, "txt", "Jane"),
-        ("letter", 15_360, "pdf", "Alex"),
-        ("statement", 76_800, "docx", "Mat"),
-        ("timesheet", 4_096, "txt", "Jane"),
-        ("checklist", 6_144, "odt", "Alex"),
-        ("presentation", 305_152, "pdf", "Mat"),
-        ("plan", 51_200, "docx", "Jane"),
-        ("review", 9_500, "txt", "Alex"),
-    ];
 
-    entries
-        .into_iter()
-        .map(|(name, size_byte, ext, created_by)| File {
-            id: uuid::Uuid::new_v4(),
-            name: name.to_string(),
-            size_byte,
-            ext: ext.to_string(),
-            added: Utc::now(),
-            created_by: created_by.to_string(),
-        })
-        .collect()
+        <ul class="upload-list">
+            <For each=move || dropped.get() key=|n| n.clone() let:name>
+                <li>{name}</li>
+            </For>
+        </ul>
+    }
 }

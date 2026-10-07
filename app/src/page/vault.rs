@@ -51,7 +51,11 @@ pub fn Vault() -> impl IntoView {
     view! {
         <Title formatter=|text| format!("{text} - My Vault") />
         <h1>"My Vault"</h1>
-        <div class="drop-overlay" class:active=move || { drag_depth.get() > 0 }>
+        <div
+            class="drop-overlay"
+            aria-hidden=move || { (drag_depth.get() == 0).then_some("true") }
+            class:active=move || { drag_depth.get() > 0 }
+        >
             <div class="drop-overlay_box">
                 <p class="drop-overlay_title">"Drop files to upload"</p>
                 <p class="drop-overlay_hint">"Release anywhere on the page"</p>

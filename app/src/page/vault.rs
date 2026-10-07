@@ -6,11 +6,15 @@ pub fn Vault() -> impl IntoView {
     // Counter, not a bool: dragenter/dragleave fire for every child element,
     // so a bool would flicker as the cursor moves over the page.
     let drag_depth = RwSignal::new(0i32);
-    let dropped = RwSignal::new(Vec::<String>::new());
+    let dropped_files = RwSignal::new(Vec::<(u64, String)>::new());
+    let next_id = StoredValue::new(0u64);
 
     // Effect = client-only, so this never runs during SSR
     Effect::new(move |_| {
         let enter = window_event_listener(ev::dragenter, move |e| {
+            if !has_files(&e) {
+                return;
+            }
             e.prevent_default();
             drag_depth.update(|d| *d += 1);
         });
@@ -28,8 +32,14 @@ pub fn Vault() -> impl IntoView {
             };
             let files: Vec<web_sys::File> =
                 (0..list.length()).filter_map(|i| list.get(i)).collect();
-            dropped.update(|d| d.extend(files.iter().map(|f| f.name())));
-            //upload file
+
+            dropped_files.update(|d| {
+                d.extend(files.iter().map(|f| {
+                    let id = next_id.get_value();
+                    next_id.set_value(id + 1);
+                    (id, f.name())
+                }))
+            });
         });
         on_cleanup(move || {
             enter.remove();
@@ -49,9 +59,15 @@ pub fn Vault() -> impl IntoView {
         </div>
 
         <ul class="upload-list">
-            <For each=move || dropped.get() key=|n| n.clone() let:name>
-                <li>{name}</li>
+            <For each=move || dropped_files.get() key=|(id, _)| *id let:entry>
+                <li>{entry.1}</li>
             </For>
         </ul>
     }
+}
+fn has_files(e: &ev::DragEvent) -> bool {
+    let Some(items) = e.data_transfer().map(|dt| dt.items()) else {
+        return false;
+    };
+    (0..items.length()).any(|i| items.get(i).is_some_and(|item| item.kind() == "file"))
 }

@@ -15,6 +15,8 @@ services = { path = "../services", optional = true }
 axum = { version = "0.8.9", optional = true }
 web-sys = { version = "0.3", features = [
   "DataTransfer",
+  "DataTransferItem",
+  "DataTransferItemList",
   "FileList",
   "File",
   "FormData",

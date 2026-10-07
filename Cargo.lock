@@ -92,6 +92,7 @@ dependencies = [
  "leptos_router",
  "services",
  "uuid",
+ "web-sys",
 ]
 
 [[package]]

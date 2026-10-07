@@ -186,6 +186,50 @@ main {
   }
 }
 
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba($surface-sunken, 0.85);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none; // never steal drag events from the window
+  transition: opacity 150ms ease;
+
+  &.active {
+    opacity: 1;
+  }
+
+  &_box {
+    padding: 4rem 6rem;
+    border: 3px dashed $brand-bright;
+    border-radius: 16px;
+    background: $brand-tint;
+    text-align: center;
+    transform: scale(0.96);
+    transition: transform 150ms ease;
+  }
+
+  &.active &_box {
+    transform: scale(1);
+  }
+
+  &_title {
+    font-family: $font-heading;
+    font-size: 1.75rem;
+    margin: 0 0 .5rem;
+    color: $text-primary;
+  }
+
+  &_hint {
+    margin: 0;
+    color: $text-secondary;
+  }
+}
+
 @media screen and (max-width: 600px) {
   .logo {
     max-width: 50px;

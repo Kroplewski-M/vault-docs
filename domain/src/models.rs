@@ -1,16 +1,6 @@
-use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Clone)]
-pub struct File {
-    pub id: Uuid,
-    pub name: String,
-    pub size_byte: usize,
-    pub ext: String,
-    pub added: chrono::DateTime<Utc>,
-    pub created_by: String,
-}
 #[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
@@ -21,4 +11,15 @@ pub struct User {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CurrentUser {
     pub id: Uuid,
+}
+
+#[derive(Clone)]
+pub struct PendingFileUpload {
+    pub id: u64,
+    pub file: web_sys::File,
+}
+impl PendingFileUpload {
+    pub fn new(id: u64, file: web_sys::File) -> Self {
+        Self { id, file }
+    }
 }

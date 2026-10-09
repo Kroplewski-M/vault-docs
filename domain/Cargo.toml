@@ -8,6 +8,7 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true, optional = true }
+web-sys = { workspace = true }
 
 [features]
 sqlx = ["dep:sqlx"]

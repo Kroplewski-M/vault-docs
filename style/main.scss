@@ -186,10 +186,116 @@ main {
   }
 }
 
+.drop-overlay-files {
+  position: fixed;
+  inset: 0;
+  z-index: 900; // under .drop-overlay (1000)
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba($surface-sunken, 0.75);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none; // invisible overlay must not block clicks
+  transition: opacity 150ms ease;
+
+  &.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.drop-over-component {
+  width: min(520px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  background: $surface-overlay;
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+
+  // Clear button
+  >button {
+    align-self: flex-end;
+    margin-top: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    border: 1px solid $surface-raised;
+    border-radius: 6px;
+    color: $text-secondary;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    background: $surface-raised;
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+}
+
+.dropped-file {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.75rem;
+  background: $surface-raised;
+  border-radius: 8px;
+
+  small {
+    font-family: $font-mono;
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+}
+
+.dropped-file-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  p {
+    margin: 0;
+    min-width: 0; // lets the ellipsis work inside flex
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $text-primary;
+  }
+
+  // Remove button
+  button {
+    flex-shrink: 0;
+    padding: 0.25rem 0.6rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: $text-muted;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: rgba($danger, 0.15);
+      color: $danger;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $brand-bright;
+      outline-offset: 2px;
+    }
+  }
+}
+
 .drop-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 1001;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -1,3 +1,4 @@
+use domain::{helpers::format_size, models::PendingFileUpload};
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
 
@@ -6,7 +7,7 @@ pub fn Vault() -> impl IntoView {
     // Counter, not a bool: dragenter/dragleave fire for every child element,
     // so a bool would flicker as the cursor moves over the page.
     let drag_depth = RwSignal::new(0i32);
-    let dropped_files = RwSignal::new(Vec::<(u64, String)>::new());
+    let dropped_files = RwSignal::new(Vec::<PendingFileUpload>::new());
     let next_id = StoredValue::new(0u64);
 
     // Effect = client-only, so this never runs during SSR
@@ -20,8 +21,13 @@ pub fn Vault() -> impl IntoView {
         });
         // Without preventDefault on dragover, the browser won't fire `drop`
         // and will open the file in the tab instead.
-        let over = window_event_listener(ev::dragover, |e| e.prevent_default());
-        let leave = window_event_listener(ev::dragleave, move |_| {
+        let over = window_event_listener(ev::dragover, move |e| {
+            e.prevent_default();
+        });
+        let leave = window_event_listener(ev::dragleave, move |e| {
+            if !has_files(&e) {
+                return;
+            }
             drag_depth.update(|d| *d = (*d - 1).max(0));
         });
         let drop_h = window_event_listener(ev::drop, move |e| {
@@ -37,7 +43,7 @@ pub fn Vault() -> impl IntoView {
                 d.extend(files.iter().map(|f| {
                     let id = next_id.get_value();
                     next_id.set_value(id + 1);
-                    (id, f.name())
+                    PendingFileUpload::new(id, f.clone())
                 }))
             });
         });
@@ -61,12 +67,34 @@ pub fn Vault() -> impl IntoView {
                 <p class="drop-overlay_hint">"Release anywhere on the page"</p>
             </div>
         </div>
-
-        <ul class="upload-list">
-            <For each=move || dropped_files.get() key=|(id, _)| *id let:entry>
-                <li>{entry.1}</li>
-            </For>
-        </ul>
+        <div
+            class="drop-overlay-files"
+            aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
+            class:active=move || { !dropped_files.get().is_empty() }
+        >
+            <div class="drop-over-component">
+                <For each=move || dropped_files.get() key=|state| state.id let(child)>
+                    <div class="dropped-file">
+                        <div class="dropped-file-name">
+                            <p>{child.file.name()}</p>
+                            <button on:click=move |_| {
+                                dropped_files
+                                    .update(|n| {
+                                        n.retain(|f| f.id != child.id);
+                                    });
+                            }>remove</button>
+                        </div>
+                        <small>{format_size(child.file.size())}</small>
+                    </div>
+                </For>
+                <button
+                    aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
+                    on:click=move |_| { dropped_files.set(Vec::<PendingFileUpload>::new()) }
+                >
+                    "Cancel"
+                </button>
+            </div>
+        </div>
     }
 }
 fn has_files(e: &ev::DragEvent) -> bool {

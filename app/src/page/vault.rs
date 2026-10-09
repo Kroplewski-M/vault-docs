@@ -87,9 +87,12 @@ pub fn Vault() -> impl IntoView {
                         <small>{format_size(child.file.size())}</small>
                     </div>
                 </For>
-                <button on:click=move |_| {
-                    dropped_files.set(Vec::<PendingFileUpload>::new())
-                }>"Cancel"</button>
+                <button
+                    aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
+                    on:click=move |_| { dropped_files.set(Vec::<PendingFileUpload>::new()) }
+                >
+                    "Cancel"
+                </button>
             </div>
         </div>
     }

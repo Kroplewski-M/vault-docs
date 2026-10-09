@@ -1,17 +1,6 @@
-use domain::helpers::format_size;
+use domain::{helpers::format_size, models::PendingFileUpload};
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
-
-#[derive(Clone)]
-pub struct PendingFileUpload {
-    pub id: u64,
-    file: web_sys::File,
-}
-impl PendingFileUpload {
-    fn new(id: u64, file: web_sys::File) -> Self {
-        Self { id, file }
-    }
-}
 
 #[component]
 pub fn Vault() -> impl IntoView {

@@ -12,3 +12,14 @@ pub struct User {
 pub struct CurrentUser {
     pub id: Uuid,
 }
+
+#[derive(Clone)]
+pub struct PendingFileUpload {
+    pub id: u64,
+    pub file: web_sys::File,
+}
+impl PendingFileUpload {
+    pub fn new(id: u64, file: web_sys::File) -> Self {
+        Self { id, file }
+    }
+}

@@ -825,6 +825,7 @@ dependencies = [
  "serde",
  "sqlx",
  "uuid",
+ "web-sys",
 ]
 
 [[package]]

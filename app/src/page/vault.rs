@@ -1,6 +1,15 @@
-use domain::{helpers::format_size, models::PendingFileUpload};
+use domain::models::PendingFileUpload;
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
+
+use crate::components::dropped_files_overlay::DroppedFilesOverlay;
+
+fn has_files(e: &ev::DragEvent) -> bool {
+    let Some(items) = e.data_transfer().map(|dt| dt.items()) else {
+        return false;
+    };
+    (0..items.length()).any(|i| items.get(i).is_some_and(|item| item.kind() == "file"))
+}
 
 #[component]
 pub fn Vault() -> impl IntoView {
@@ -65,41 +74,9 @@ pub fn Vault() -> impl IntoView {
             <div class="drop-overlay_box">
                 <p class="drop-overlay_title">"Drop files to upload"</p>
                 <p class="drop-overlay_hint">"Release anywhere on the page"</p>
+                <br />
             </div>
         </div>
-        <div
-            class="drop-overlay-files"
-            aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
-            class:active=move || { !dropped_files.get().is_empty() }
-        >
-            <div class="drop-over-component">
-                <For each=move || dropped_files.get() key=|state| state.id let(child)>
-                    <div class="dropped-file">
-                        <div class="dropped-file-name">
-                            <p>{child.file.name()}</p>
-                            <button on:click=move |_| {
-                                dropped_files
-                                    .update(|n| {
-                                        n.retain(|f| f.id != child.id);
-                                    });
-                            }>remove</button>
-                        </div>
-                        <small>{format_size(child.file.size())}</small>
-                    </div>
-                </For>
-                <button
-                    aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
-                    on:click=move |_| { dropped_files.set(Vec::<PendingFileUpload>::new()) }
-                >
-                    "Cancel"
-                </button>
-            </div>
-        </div>
+        <DroppedFilesOverlay dropped_files=dropped_files />
     }
-}
-fn has_files(e: &ev::DragEvent) -> bool {
-    let Some(items) = e.data_transfer().map(|dt| dt.items()) else {
-        return false;
-    };
-    (0..items.length()).any(|i| items.get(i).is_some_and(|item| item.kind() == "file"))
 }

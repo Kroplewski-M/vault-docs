@@ -86,12 +86,14 @@ dependencies = [
  "axum",
  "chrono",
  "domain",
+ "js-sys",
  "leptos",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
  "services",
  "uuid",
+ "wasm-bindgen-futures",
  "web-sys",
 ]
 

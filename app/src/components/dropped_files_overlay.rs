@@ -1,8 +1,8 @@
-use domain::{helpers::format_size, models::PendingFileUpload};
+use domain::{files::UploadedFile, helpers::format_size};
 use leptos::prelude::*;
 
 #[component]
-pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<PendingFileUpload>>) -> impl IntoView {
+pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl IntoView {
     view! {
         <div
             class="drop-overlay-files"
@@ -13,7 +13,7 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<PendingFileUpload>>) -> i
                 <For each=move || dropped_files.get() key=|state| state.id let(child)>
                     <div class="dropped-file">
                         <div class="dropped-file-name">
-                            <p>{child.file.name()}</p>
+                            <p>{child.name()}</p>
                             <button on:click=move |_| {
                                 dropped_files
                                     .update(|n| {
@@ -21,12 +21,12 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<PendingFileUpload>>) -> i
                                     });
                             }>remove</button>
                         </div>
-                        <small>{format_size(child.file.size())}</small>
+                        <small>{format_size(child.size())}</small>
                     </div>
                 </For>
                 <button
                     aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
-                    on:click=move |_| { dropped_files.set(Vec::<PendingFileUpload>::new()) }
+                    on:click=move |_| { dropped_files.set(Vec::<UploadedFile>::new()) }
                 >
                     "Cancel"
                 </button>

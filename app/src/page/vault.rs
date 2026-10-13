@@ -1,4 +1,4 @@
-use domain::models::PendingFileUpload;
+use domain::files::UploadedFile;
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
 
@@ -16,8 +16,7 @@ pub fn Vault() -> impl IntoView {
     // Counter, not a bool: dragenter/dragleave fire for every child element,
     // so a bool would flicker as the cursor moves over the page.
     let drag_depth = RwSignal::new(0i32);
-    let dropped_files = RwSignal::new(Vec::<PendingFileUpload>::new());
-    let next_id = StoredValue::new(0u64);
+    let dropped_files = RwSignal::new(Vec::<UploadedFile>::new());
 
     // Effect = client-only, so this never runs during SSR
     Effect::new(move |_| {
@@ -48,13 +47,22 @@ pub fn Vault() -> impl IntoView {
             let files: Vec<web_sys::File> =
                 (0..list.length()).filter_map(|i| list.get(i)).collect();
 
-            dropped_files.update(|d| {
-                d.extend(files.iter().map(|f| {
-                    let id = next_id.get_value();
-                    next_id.set_value(id + 1);
-                    PendingFileUpload::new(id, f.clone())
-                }))
-            });
+            for file in files {
+                // Check the size before reading, so huge files never get loaded into memory
+                let size = file.size() as usize;
+                if UploadedFile::exceeds_max_size(size) {
+                    dropped_files.update(|d| d.push(UploadedFile::oversized(file.name(), size)));
+                    continue;
+                }
+                leptos::task::spawn_local(async move {
+                    let Ok(buf) = wasm_bindgen_futures::JsFuture::from(file.array_buffer()).await
+                    else {
+                        return;
+                    };
+                    let bytes = js_sys::Uint8Array::new(&buf).to_vec();
+                    dropped_files.update(|d| d.push(UploadedFile::new(file.name(), bytes)));
+                });
+            }
         });
         on_cleanup(move || {
             enter.remove();

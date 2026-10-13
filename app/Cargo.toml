@@ -14,6 +14,8 @@ chrono = { workspace = true }
 services = { path = "../services", optional = true }
 axum = { version = "0.8.9", optional = true }
 web-sys = { workspace = true }
+js-sys = "0.3"
+wasm-bindgen-futures = "0.4"
 [features]
 hydrate = ["leptos/hydrate"]
 ssr = [

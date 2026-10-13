@@ -48,6 +48,12 @@ pub fn Vault() -> impl IntoView {
                 (0..list.length()).filter_map(|i| list.get(i)).collect();
 
             for file in files {
+                // Check the size before reading, so huge files never get loaded into memory
+                let size = file.size() as usize;
+                if UploadedFile::exceeds_max_size(size) {
+                    dropped_files.update(|d| d.push(UploadedFile::oversized(file.name(), size)));
+                    continue;
+                }
                 leptos::task::spawn_local(async move {
                     let Ok(buf) = wasm_bindgen_futures::JsFuture::from(file.array_buffer()).await
                     else {

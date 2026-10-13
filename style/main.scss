@@ -66,6 +66,7 @@ nav {
 
 .file-errors {
   display: flex;
+  flex-direction: column;
   border-radius: 0.3rem;
   background-color: $danger;
   padding: 10px;

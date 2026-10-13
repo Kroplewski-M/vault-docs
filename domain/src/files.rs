@@ -1,4 +1,4 @@
-use std::{ffi::os_str::Display, fmt};
+use std::fmt;
 
 use uuid::Uuid;
 
@@ -124,6 +124,7 @@ pub enum FileStatus {
 pub struct UploadedFile {
     pub id: Uuid,
     bytes: Vec<u8>,
+    size: usize,
     name: String,
     status: FileStatus,
 }
@@ -131,22 +132,42 @@ pub struct UploadedFile {
 impl UploadedFile {
     pub fn new(name: impl Into<String>, bytes: Vec<u8>) -> Self {
         let name = name.into();
-        let status = Self::validate(&name, &bytes);
+        let size = bytes.len();
+        let status = Self::validate(&name, size, Some(&bytes));
         Self {
             id: Uuid::new_v4(),
             bytes,
+            size,
             name,
             status,
         }
     }
 
-    fn validate(name: &str, bytes: &[u8]) -> FileStatus {
+    /// A file rejected by size alone, so its contents are never read into memory.
+    pub fn oversized(name: impl Into<String>, size: usize) -> Self {
+        let name = name.into();
+        let status = Self::validate(&name, size, None);
+        Self {
+            id: Uuid::new_v4(),
+            bytes: Vec::new(),
+            size,
+            name,
+            status,
+        }
+    }
+
+    pub fn exceeds_max_size(size: usize) -> bool {
+        size > DEFAULT_MAX_FILE_SIZE
+    }
+
+    /// `bytes` is None when the contents were not loaded (oversized files).
+    fn validate(name: &str, size: usize, bytes: Option<&[u8]>) -> FileStatus {
         let mut errors = Vec::new();
 
-        let too_large = bytes.len() > DEFAULT_MAX_FILE_SIZE;
+        let too_large = Self::exceeds_max_size(size);
         if too_large {
             errors.push(UploadError::TooLarge {
-                size: bytes.len(),
+                size,
                 max: DEFAULT_MAX_FILE_SIZE,
             });
         }
@@ -161,10 +182,9 @@ impl UploadedFile {
         }
 
         // Skip scanning content of oversized files
-        let detected = if too_large {
-            None
-        } else {
-            ContentKind::from_bytes(bytes)
+        let detected = match bytes {
+            Some(bytes) if !too_large => ContentKind::from_bytes(bytes),
+            _ => None,
         };
         if !too_large && detected.is_none() {
             errors.push(UploadError::UnrecognisedContent);
@@ -186,7 +206,7 @@ impl UploadedFile {
         self.name.clone()
     }
     pub fn size(&self) -> i64 {
-        self.bytes.len() as i64
+        self.size as i64
     }
     pub fn bytes(&self) -> &[u8] {
         &self.bytes

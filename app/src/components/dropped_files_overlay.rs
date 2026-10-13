@@ -11,7 +11,13 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
             class:active=move || { !dropped_files.get().is_empty() }
         >
             <div class="drop-over-component">
-                <For each=move || dropped_files.get() key=|state| state.id let(child)>
+                <For
+                    each=move || {
+                        let mut files = dropped_files.get();
+                        files.sort_by_key(|f| !f.is_valid());
+                        files
+                    }
+                    key=|state| state.id let(child)>
                     <div class="dropped-file">
                         <div class="dropped-file-name">
                             <p>

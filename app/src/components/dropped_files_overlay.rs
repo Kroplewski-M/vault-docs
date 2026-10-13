@@ -1,3 +1,4 @@
+use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
 use domain::{files::UploadedFile, helpers::format_size};
 use leptos::prelude::*;
 
@@ -13,7 +14,16 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                 <For each=move || dropped_files.get() key=|state| state.id let(child)>
                     <div class="dropped-file">
                         <div class="dropped-file-name">
-                            <p>{child.name()}</p>
+                            <p>
+                                {
+                                    if child.is_valid() {
+                                        view! { <TickIcon class="file-valid" /> }.into_any()
+                                    } else {
+                                        view! { <CrossIcon class="file-invalid" /> }.into_any()
+                                    }
+                                }
+                                {child.name()}
+                            </p>
                             <button on:click=move |_| {
                                 dropped_files
                                     .update(|n| {
@@ -22,6 +32,11 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                             }>remove</button>
                         </div>
                         <small>{format_size(child.size())}</small>
+                        {(!child.is_valid()).then(|| view! {
+                        <div class="file-errors">
+                            {child.errors().iter().map(|err| view! { <span>{err.to_string()}</span> }).collect_view()}
+                        </div>
+                         })}
                     </div>
                 </For>
                 <button

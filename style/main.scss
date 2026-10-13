@@ -64,6 +64,14 @@ nav {
   width: auto;
 }
 
+.file-errors {
+  display: flex;
+  border-radius: 0.3rem;
+  background-color: $danger;
+  padding: 10px;
+  margin-top: 0.5rem;
+}
+
 .logo {
   display: flex;
   align-items: center;
@@ -290,6 +298,24 @@ main {
       outline-offset: 2px;
     }
   }
+}
+
+// Validation icons shown before the file name
+.file-valid,
+.file-invalid {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.4rem;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+.file-valid {
+  color: $success;
+}
+
+.file-invalid {
+  color: $danger;
 }
 
 .drop-overlay {

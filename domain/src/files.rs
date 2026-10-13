@@ -1,4 +1,8 @@
+use std::{ffi::os_str::Display, fmt};
+
 use uuid::Uuid;
+
+use crate::helpers::format_size;
 
 /// Default max file size: 50 MiB
 pub const DEFAULT_MAX_FILE_SIZE: usize = 50 * 1024 * 1024;
@@ -7,14 +11,45 @@ pub const DEFAULT_MAX_FILE_SIZE: usize = 50 * 1024 * 1024;
 pub enum FileFormat {
     Pdf,
     Md,
+    Txt,
 }
+
+/// What the file's bytes actually contain. Several formats can share a kind
+/// (e.g. md and txt are both plain text), so the extension picks the exact format.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContentKind {
+    Pdf,
+    Text,
+}
+impl fmt::Display for ContentKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Pdf => write!(f, "PDF"),
+            Self::Text => write!(f, "plain text"),
+        }
+    }
+}
+impl ContentKind {
+    /// Detect content kind from magic bytes, Returns None if unrecognised
+    pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
+        if bytes.starts_with(b"%PDF-") {
+            return Some(Self::Pdf);
+        }
+        if is_text(bytes) {
+            return Some(Self::Text);
+        }
+        None
+    }
+}
+
 impl FileFormat {
-    pub const ALL: &'static [Self] = &[Self::Pdf, Self::Md];
+    pub const ALL: &'static [Self] = &[Self::Pdf, Self::Md, Self::Txt];
 
     pub fn extension(&self) -> &'static str {
         match self {
             Self::Pdf => "pdf",
             Self::Md => "md",
+            Self::Txt => "txt",
         }
     }
     pub fn from_extension(ext: &str) -> Option<Self> {
@@ -27,17 +62,19 @@ impl FileFormat {
         match self {
             Self::Pdf => "application/pdf",
             Self::Md => "text/markdown",
+            Self::Txt => "text/plain",
         }
     }
-    /// Detext format from magic bytes, Resturns None if unrecognised
-    pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
-        if bytes.starts_with(b"%PDF-") {
-            return Some(Self::Pdf);
+    pub fn content_kind(&self) -> ContentKind {
+        match self {
+            Self::Pdf => ContentKind::Pdf,
+            Self::Md | Self::Txt => ContentKind::Text,
         }
-        if is_text(bytes) {
-            return Some(Self::Md);
-        }
-        None
+    }
+}
+impl fmt::Display for FileFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, ".{}", self.extension())
     }
 }
 fn is_text(bytes: &[u8]) -> bool {
@@ -54,10 +91,28 @@ pub enum UploadError {
     UnrecognisedContent,
     ExtensionMismatch {
         expected: FileFormat,
-        detected: FileFormat,
+        detected: ContentKind,
     },
 }
+impl fmt::Display for UploadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TooLarge { size, max } => write!(
+                f,
+                "File is too large ({}, max {})",
+                format_size(*size as i64),
+                format_size(*max as i64)
+            ),
+            Self::UnsupportedExtension => write!(f, "Unsupported file type"),
+            Self::UnrecognisedContent => write!(f, "File contents could not be recognised"),
+            Self::ExtensionMismatch { expected, detected } => {
+                write!(f, "File has a {expected} extension but contains {detected}")
+            }
+        }
+    }
+}
 
+impl std::error::Error for UploadError {}
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FileStatus {
     Valid(FileFormat),
@@ -109,19 +164,19 @@ impl UploadedFile {
         let detected = if too_large {
             None
         } else {
-            FileFormat::from_bytes(bytes)
+            ContentKind::from_bytes(bytes)
         };
         if !too_large && detected.is_none() {
             errors.push(UploadError::UnrecognisedContent);
         }
 
         if let (Some(expected), Some(detected)) = (expected, detected)
-            && expected != detected
+            && expected.content_kind() != detected
         {
             errors.push(UploadError::ExtensionMismatch { expected, detected });
         }
 
-        match (errors.is_empty(), detected) {
+        match (errors.is_empty(), expected) {
             (true, Some(format)) => FileStatus::Valid(format),
             _ => FileStatus::Invalid(errors),
         }

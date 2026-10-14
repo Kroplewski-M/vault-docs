@@ -1,11 +1,11 @@
-use std::fmt;
+use std::{fmt, sync::Arc};
 
 use uuid::Uuid;
 
 use crate::helpers::format_size;
 
-/// Default max file size: 50 MiB
-pub const DEFAULT_MAX_FILE_SIZE: usize = 50 * 1024 * 1024;
+/// Default max file size: 15 MiB
+pub const DEFAULT_MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileFormat {
@@ -123,7 +123,7 @@ pub enum FileStatus {
 #[derive(Debug, Clone)]
 pub struct UploadedFile {
     pub id: Uuid,
-    bytes: Vec<u8>,
+    bytes: Arc<[u8]>,
     size: usize,
     name: String,
     status: FileStatus,
@@ -136,7 +136,7 @@ impl UploadedFile {
         let status = Self::validate(&name, size, Some(&bytes));
         Self {
             id: Uuid::new_v4(),
-            bytes,
+            bytes: bytes.into(),
             size,
             name,
             status,
@@ -149,7 +149,7 @@ impl UploadedFile {
         let status = Self::validate(&name, size, None);
         Self {
             id: Uuid::new_v4(),
-            bytes: Vec::new(),
+            bytes: Arc::from([]),
             size,
             name,
             status,

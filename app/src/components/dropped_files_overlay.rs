@@ -7,8 +7,8 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
     view! {
         <div
             class="drop-overlay-files"
-            aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
-            class:active=move || { !dropped_files.get().is_empty() }
+            aria-hidden=move || dropped_files.with(|f| f.is_empty()).then_some("true")
+            class:active=move || !dropped_files.with(|f| f.is_empty())
         >
             <div class="drop-over-component">
                 <For
@@ -17,18 +17,17 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                         files.sort_by_key(|f| !f.is_valid());
                         files
                     }
-                    key=|state| state.id let(child)>
+                    key=|state| state.id
+                    let(child)
+                >
                     <div class="dropped-file">
                         <div class="dropped-file-name">
                             <p>
-                                {
-                                    if child.is_valid() {
-                                        view! { <TickIcon class="file-valid" /> }.into_any()
-                                    } else {
-                                        view! { <CrossIcon class="file-invalid" /> }.into_any()
-                                    }
-                                }
-                                {child.name()}
+                                {if child.is_valid() {
+                                    view! { <TickIcon class="file-valid" /> }.into_any()
+                                } else {
+                                    view! { <CrossIcon class="file-invalid" /> }.into_any()
+                                }} {child.name()}
                             </p>
                             <button on:click=move |_| {
                                 dropped_files
@@ -38,15 +37,22 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                             }>remove</button>
                         </div>
                         <small>{format_size(child.size())}</small>
-                        {(!child.is_valid()).then(|| view! {
-                        <div class="file-errors">
-                            {child.errors().iter().map(|err| view! { <span>{err.to_string()}</span> }).collect_view()}
-                        </div>
-                         })}
+                        {(!child.is_valid())
+                            .then(|| {
+                                view! {
+                                    <div class="file-errors">
+                                        {child
+                                            .errors()
+                                            .iter()
+                                            .map(|err| view! { <span>{err.to_string()}</span> })
+                                            .collect_view()}
+                                    </div>
+                                }
+                            })}
                     </div>
                 </For>
                 <button
-                    aria-hidden=move || { (dropped_files.get().is_empty()).then_some("true") }
+                    aria-hidden=move || dropped_files.with(|f| f.is_empty()).then_some("true")
                     on:click=move |_| { dropped_files.set(Vec::<UploadedFile>::new()) }
                 >
                     "Cancel"

@@ -6,7 +6,7 @@ members = ["app", "db", "domain", "frontend", "server", "services"]
 [workspace.dependencies]
 uuid = { version = "1.24.1", features = ["v4", "rng-rand", "serde"] }
 chrono = { version = "0.4.45", features = ["std"] }
-serde = { version = "1.0.229", features = ["derive"] }
+serde = { version = "1.0.229", features = ["derive", "rc"] }
 sqlx = { version = "0.9.0", features = [
   "tls-rustls",
   "runtime-tokio",

@@ -51,12 +51,26 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                             })}
                     </div>
                 </For>
-                <button
-                    aria-hidden=move || dropped_files.with(|f| f.is_empty()).then_some("true")
-                    on:click=move |_| { dropped_files.set(Vec::<UploadedFile>::new()) }
-                >
-                    "Cancel"
-                </button>
+                <div class="dropped-files_btn_container">
+                    <button
+                        aria-hidden=move || dropped_files.with(|f| f.is_empty()).then_some("true")
+                        on:click=move |_| { dropped_files.set(Vec::<UploadedFile>::new()) }
+                        class="button-default"
+                    >
+                        "Cancel"
+                    </button>
+                    <button
+                        aria-hidden=move || {
+                            dropped_files
+                                .with(|f| f.iter().all(|x| !x.is_valid()))
+                                .then_some("true")
+                        }
+                        class="button-success"
+                        class:hidden=move || dropped_files.with(|f| f.iter().all(|x| !x.is_valid()))
+                    >
+                        "Upload"
+                    </button>
+                </div>
             </div>
         </div>
     }

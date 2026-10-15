@@ -1,5 +1,6 @@
 use std::{fmt, sync::Arc};
 
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::helpers::format_size;
@@ -7,7 +8,7 @@ use crate::helpers::format_size;
 /// Default max file size: 15 MiB
 pub const DEFAULT_MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FileFormat {
     Pdf,
     Md,
@@ -16,7 +17,7 @@ pub enum FileFormat {
 
 /// What the file's bytes actually contain. Several formats can share a kind
 /// (e.g. md and txt are both plain text), so the extension picks the exact format.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ContentKind {
     Pdf,
     Text,
@@ -81,7 +82,7 @@ fn is_text(bytes: &[u8]) -> bool {
     !bytes.is_empty() && !bytes.contains(&0) && std::str::from_utf8(bytes).is_ok()
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UploadError {
     TooLarge {
         size: usize,
@@ -113,14 +114,14 @@ impl fmt::Display for UploadError {
 }
 
 impl std::error::Error for UploadError {}
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FileStatus {
     Valid(FileFormat),
     Invalid(Vec<UploadError>),
 }
 
 /// A file the user dropped. It may or may not be valid.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UploadedFile {
     pub id: Uuid,
     bytes: Arc<[u8]>,

@@ -2,7 +2,9 @@ use domain::files::UploadedFile;
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
 
-use crate::components::dropped_files_overlay::DroppedFilesOverlay;
+use crate::components::{
+    dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
+};
 
 fn has_files(e: &ev::DragEvent) -> bool {
     let Some(items) = e.data_transfer().map(|dt| dt.items()) else {
@@ -79,11 +81,7 @@ pub fn Vault() -> impl IntoView {
             aria-hidden=move || { (drag_depth.get() == 0).then_some("true") }
             class:active=move || { drag_depth.get() > 0 }
         >
-            <div class="drop-overlay_box">
-                <p class="drop-overlay_title">"Drop files to upload"</p>
-                <p class="drop-overlay_hint">"Release anywhere on the page"</p>
-                <br />
-            </div>
+            <DroppingFilesOverlay />
         </div>
         <DroppedFilesOverlay dropped_files=dropped_files />
     }

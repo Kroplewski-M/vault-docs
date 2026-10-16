@@ -9,6 +9,7 @@ leptos = "0.8.20"
 leptos_meta = "0.8.6"
 leptos_router = "0.8.15"
 leptos_axum = { version = "0.8.10", optional = true }
+server_fn = { version = "0.8", features = ["multipart"] }
 uuid = { workspace = true }
 chrono = { workspace = true }
 services = { path = "../services", optional = true }

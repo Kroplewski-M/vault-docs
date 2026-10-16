@@ -1,6 +1,25 @@
 use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
 use domain::{files::UploadedFile, helpers::format_size};
+use leptos::logging::log;
 use leptos::prelude::*;
+use leptos::reactive::spawn_local;
+use leptos::server_fn::codec::{MultipartData, MultipartFormData};
+use web_sys::FormData;
+
+#[server(input = MultipartFormData)]
+pub async fn upload_files(data: MultipartData) -> Result<(), ServerFnError> {
+    let mut data = data.into_inner().unwrap();
+    while let Ok(Some(field)) = data.next_field().await {
+        let name = field.file_name().unwrap_or_default().to_string();
+        let bytes = field.bytes().await.map_err(ServerFnError::new)?;
+        //Revalidate the files on the server
+        let file = UploadedFile::new(name, bytes.to_vec());
+        if file.is_valid() {
+            log!("received {} ({} bytes)", file.name(), file.size());
+        }
+    }
+    Ok(())
+}
 
 #[component]
 pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl IntoView {
@@ -67,6 +86,26 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<UploadedFile>>) -> impl I
                         }
                         class="button-success"
                         class:hidden=move || dropped_files.with(|f| f.iter().all(|x| !x.is_valid()))
+                        on:click=move |_| {
+                            let form = FormData::new().unwrap();
+                            dropped_files
+                                .with(|files| {
+                                    for f in files.iter().filter(|f| f.is_valid()) {
+                                        let arr = js_sys::Array::of1(
+                                            &js_sys::Uint8Array::from(f.bytes()),
+                                        );
+                                        let blob = web_sys::Blob::new_with_u8_array_sequence(&arr)
+                                            .unwrap();
+                                        form.append_with_blob_and_filename("file", &blob, &f.name())
+                                            .unwrap();
+                                    }
+                                });
+                            spawn_local(async move {
+                                if let Err(e) = upload_files(form.into()).await {
+                                    leptos::logging::error!("upload failed: {e}");
+                                }
+                            });
+                        }
                     >
                         "Upload"
                     </button>

@@ -65,6 +65,7 @@ async fn main() {
             state.clone(),
             middleware::session,
         ))
+        .layer(axum::extract::DefaultBodyLimit::max(100 * 1024 * 1024))
         .fallback(leptos_axum::file_and_error_handler::<AppState, _>(shell))
         .with_state(state);
 

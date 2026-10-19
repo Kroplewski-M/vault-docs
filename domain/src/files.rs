@@ -1,4 +1,4 @@
-use std::{fmt, sync::Arc};
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -124,20 +124,18 @@ pub enum FileStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UploadedFile {
     pub id: Uuid,
-    bytes: Arc<[u8]>,
     size: usize,
     name: String,
     status: FileStatus,
 }
 
 impl UploadedFile {
-    pub fn new(name: impl Into<String>, bytes: Vec<u8>) -> Self {
+    pub fn new(name: impl Into<String>, bytes: &[u8]) -> Self {
         let name = name.into();
         let size = bytes.len();
-        let status = Self::validate(&name, size, Some(&bytes));
+        let status = Self::validate(&name, size, Some(bytes));
         Self {
             id: Uuid::new_v4(),
-            bytes: bytes.into(),
             size,
             name,
             status,
@@ -150,7 +148,6 @@ impl UploadedFile {
         let status = Self::validate(&name, size, None);
         Self {
             id: Uuid::new_v4(),
-            bytes: Arc::from([]),
             size,
             name,
             status,
@@ -208,9 +205,6 @@ impl UploadedFile {
     }
     pub fn size(&self) -> i64 {
         self.size as i64
-    }
-    pub fn bytes(&self) -> &[u8] {
-        &self.bytes
     }
     pub fn status(&self) -> &FileStatus {
         &self.status

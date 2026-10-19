@@ -6,6 +6,12 @@ use crate::components::{
     dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
 };
 
+#[derive(Clone)]
+pub struct DroppedFile {
+    pub meta: UploadedFile,
+    pub file: web_sys::File,
+}
+
 fn has_files(e: &ev::DragEvent) -> bool {
     let Some(items) = e.data_transfer().map(|dt| dt.items()) else {
         return false;
@@ -18,7 +24,7 @@ pub fn Vault() -> impl IntoView {
     // Counter, not a bool: dragenter/dragleave fire for every child element,
     // so a bool would flicker as the cursor moves over the page.
     let drag_depth = RwSignal::new(0i32);
-    let dropped_files = RwSignal::new(Vec::<UploadedFile>::new());
+    let dropped_files = RwSignal::new(Vec::<DroppedFile>::new());
 
     // Effect = client-only, so this never runs during SSR
     Effect::new(move |_| {
@@ -53,7 +59,12 @@ pub fn Vault() -> impl IntoView {
                 // Check the size before reading, so huge files never get loaded into memory
                 let size = file.size() as usize;
                 if UploadedFile::exceeds_max_size(size) {
-                    dropped_files.update(|d| d.push(UploadedFile::oversized(file.name(), size)));
+                    dropped_files.update(|d| {
+                        d.push(DroppedFile {
+                            meta: UploadedFile::oversized(file.name(), size),
+                            file,
+                        })
+                    });
                     continue;
                 }
                 leptos::task::spawn_local(async move {
@@ -62,7 +73,12 @@ pub fn Vault() -> impl IntoView {
                         return;
                     };
                     let bytes = js_sys::Uint8Array::new(&buf).to_vec();
-                    dropped_files.update(|d| d.push(UploadedFile::new(file.name(), bytes)));
+                    dropped_files.update(|d| {
+                        d.push(DroppedFile {
+                            meta: UploadedFile::new(file.name(), &bytes),
+                            file,
+                        })
+                    });
                 });
             }
         });

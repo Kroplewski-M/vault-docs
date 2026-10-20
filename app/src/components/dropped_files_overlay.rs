@@ -1,25 +1,10 @@
 use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
 use crate::page::vault::DroppedFile;
-use domain::{files::UploadedFile, helpers::format_size};
+use crate::server_functions::files::upload_files;
+use domain::helpers::format_size;
 use leptos::prelude::*;
 use leptos::reactive::spawn_local;
-use leptos::server_fn::codec::{MultipartData, MultipartFormData};
 use web_sys::FormData;
-
-#[server(input = MultipartFormData)]
-pub async fn upload_files(data: MultipartData) -> Result<(), ServerFnError> {
-    let mut data = data.into_inner().unwrap();
-    while let Ok(Some(field)) = data.next_field().await {
-        let name = field.file_name().unwrap_or_default().to_string();
-        let bytes = field.bytes().await.map_err(ServerFnError::new)?;
-        //Revalidate the files on the server
-        let file = UploadedFile::new(name, &bytes);
-        if file.is_valid() {
-            leptos::logging::log!("received {} ({} bytes)", file.name(), file.size());
-        }
-    }
-    Ok(())
-}
 
 #[component]
 pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl IntoView {
@@ -86,13 +71,19 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                                 .then_some("true")
                         }
                         class="button-success"
-                        class:hidden=move || dropped_files.with(|f| f.iter().all(|x| !x.meta.is_valid()))
+                        class:hidden=move || {
+                            dropped_files.with(|f| f.iter().all(|x| !x.meta.is_valid()))
+                        }
                         on:click=move |_| {
                             let form = FormData::new().unwrap();
                             dropped_files
                                 .with(|files| {
                                     for f in files.iter().filter(|f| f.meta.is_valid()) {
-                                        form.append_with_blob_and_filename("file", &f.file, &f.meta.name())
+                                        form.append_with_blob_and_filename(
+                                                "file",
+                                                &f.file,
+                                                &f.meta.name(),
+                                            )
                                             .unwrap();
                                     }
                                 });

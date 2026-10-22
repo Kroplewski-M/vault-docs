@@ -102,7 +102,7 @@ pub fn Vault() -> impl IntoView {
                 }
             }
         >
-            "Uplaod Files"
+            "Upload Files"
         </button>
         <input
             type="file"

@@ -131,4 +131,5 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
             </div>
         </div>
     }
+    .into_any()
 }

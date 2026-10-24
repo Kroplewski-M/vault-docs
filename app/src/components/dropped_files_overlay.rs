@@ -8,6 +8,7 @@ use web_sys::FormData;
 
 #[component]
 pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl IntoView {
+    let uploading_files = RwSignal::new(false);
     view! {
         <div
             class="drop-overlay-files"
@@ -15,6 +16,7 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
             class:active=move || !dropped_files.with(|f| f.is_empty())
         >
             <div class="drop-over-component">
+
                 <For
                     each=move || {
                         let mut files = dropped_files.get();
@@ -33,12 +35,15 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                                     view! { <CrossIcon class="file-invalid" /> }.into_any()
                                 }} {child.meta.name()}
                             </p>
-                            <button on:click=move |_| {
-                                dropped_files
-                                    .update(|n| {
-                                        n.retain(|f| f.meta.id != child.meta.id);
-                                    });
-                            }>remove</button>
+                            <Show when=move || !uploading_files.get()>
+                                <button on:click=move |_| {
+                                    dropped_files
+                                        .update(|n| {
+                                            n.retain(|f| f.meta.id != child.meta.id);
+                                        });
+                                }>remove</button>
+                            </Show>
+
                         </div>
                         <small>{format_size(child.meta.size())}</small>
                         {(!child.meta.is_valid())
@@ -56,47 +61,73 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                             })}
                     </div>
                 </For>
-                <div class="dropped-files_btn_container">
-                    <button
-                        aria-hidden=move || dropped_files.with(|f| f.is_empty()).then_some("true")
-                        on:click=move |_| { dropped_files.set(Vec::<DroppedFile>::new()) }
-                        class="button-default"
-                    >
-                        "Cancel"
-                    </button>
-                    <button
-                        aria-hidden=move || {
-                            dropped_files
-                                .with(|f| f.iter().all(|x| !x.meta.is_valid()))
-                                .then_some("true")
+                <Show
+                    when=move || !uploading_files.get()
+                    fallback=move || {
+                        let count = dropped_files.get().len();
+                        view! {
+                            <div class="upload-status" role="status" aria-live="polite">
+                                <span class="upload-status-spinner" aria-hidden="true"></span>
+                                <div>
+                                    <p class="upload-status-title">
+                                        {format!(
+                                            "Uploading {count} file{}…",
+                                            if count == 1 { "" } else { "s" },
+                                        )}
+                                    </p>
+                                    <small>"Please keep this tab open until it finishes."</small>
+                                </div>
+                            </div>
                         }
-                        class="button-success"
-                        class:hidden=move || {
-                            dropped_files.with(|f| f.iter().all(|x| !x.meta.is_valid()))
-                        }
-                        on:click=move |_| {
-                            let form = FormData::new().unwrap();
-                            dropped_files
-                                .with(|files| {
-                                    for f in files.iter().filter(|f| f.meta.is_valid()) {
-                                        form.append_with_blob_and_filename(
-                                                "file",
-                                                &f.file,
-                                                &f.meta.name(),
-                                            )
-                                            .unwrap();
+                    }
+                >
+                    <div class="dropped-files_btn_container">
+                        <button
+                            aria-hidden=move || {
+                                dropped_files.with(|f| f.is_empty()).then_some("true")
+                            }
+                            on:click=move |_| { dropped_files.set(Vec::<DroppedFile>::new()) }
+                            class="button-default"
+                        >
+                            "Cancel"
+                        </button>
+                        <button
+                            aria-hidden=move || {
+                                dropped_files
+                                    .with(|f| f.iter().all(|x| !x.meta.is_valid()))
+                                    .then_some("true")
+                            }
+                            class="button-success"
+                            class:hidden=move || {
+                                dropped_files.with(|f| f.iter().all(|x| !x.meta.is_valid()))
+                            }
+                            on:click=move |_| {
+                                dropped_files.update(|f| f.retain(|file| file.meta.is_valid()));
+                                let form = FormData::new().unwrap();
+                                dropped_files
+                                    .with(|files| {
+                                        for f in files.iter().filter(|f| f.meta.is_valid()) {
+                                            form.append_with_blob_and_filename(
+                                                    "file",
+                                                    &f.file,
+                                                    &f.meta.name(),
+                                                )
+                                                .unwrap();
+                                        }
+                                    });
+                                spawn_local(async move {
+                                    uploading_files.set(true);
+                                    if let Err(e) = upload_files(form.into()).await {
+                                        leptos::logging::error!("upload failed: {e}");
                                     }
+                                    uploading_files.set(false);
                                 });
-                            spawn_local(async move {
-                                if let Err(e) = upload_files(form.into()).await {
-                                    leptos::logging::error!("upload failed: {e}");
-                                }
-                            });
-                        }
-                    >
-                        "Upload"
-                    </button>
-                </div>
+                            }
+                        >
+                            "Upload"
+                        </button>
+                    </div>
+                </Show>
             </div>
         </div>
     }

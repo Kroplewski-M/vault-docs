@@ -15,8 +15,8 @@ $text-secondary: #D5BBB5; //  8.8:1
 $text-muted: #9A8A86; //  4.6:1 — timestamps, file sizes
 $text-neutral: #EDEDEB; // document preview panes
 // Semantic
-$success: #56C08D;
-$success-secondary: #037d50;
+$success: #037d50;
+$success-secondary: #025C50;
 $warning: #E8A33D;
 $danger: #FF6B5B;
 $info: #6BA8E8;
@@ -394,6 +394,51 @@ main {
     margin: 0;
     color: $text-secondary;
   }
+}
+
+.upload-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: $surface-raised;
+  border-radius: 8px;
+
+  p {
+    margin: 0;
+  }
+
+  small {
+    font-family: $font-body;
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+}
+
+.upload-status-spinner {
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 3px solid $surface-overlay;
+  border-top-color: $brand-bright;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 2.4s;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-status-title {
+  font-family: $font-heading;
+  font-weight: 600;
+  color: $text-primary;
 }
 
 @media screen and (max-width: 600px) {

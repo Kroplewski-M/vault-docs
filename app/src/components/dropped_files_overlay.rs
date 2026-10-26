@@ -125,6 +125,7 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                                             dropped_files.set(Vec::new());
                                         }
                                         Err(e) => {
+                                            toasts.error("Files uploaded");
                                             leptos::logging::error!("upload failed: {e}");
                                         }
                                     }

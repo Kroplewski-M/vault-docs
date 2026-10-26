@@ -1,4 +1,5 @@
 use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
+use crate::components::toast::Toasts;
 use crate::page::vault::DroppedFile;
 use crate::server_functions::files::upload_files;
 use domain::helpers::format_size;
@@ -7,8 +8,12 @@ use leptos::reactive::spawn_local;
 use web_sys::FormData;
 
 #[component]
-pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl IntoView {
-    let uploading_files = RwSignal::new(false);
+pub fn DroppedFilesOverlay(
+    dropped_files: RwSignal<Vec<DroppedFile>>,
+    uploading_files: RwSignal<bool>,
+) -> impl IntoView {
+    let toasts = expect_context::<Toasts>();
+
     view! {
         <div
             class="drop-overlay-files"
@@ -117,8 +122,15 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                                     });
                                 spawn_local(async move {
                                     uploading_files.set(true);
-                                    if let Err(e) = upload_files(form.into()).await {
-                                        leptos::logging::error!("upload failed: {e}");
+                                    match upload_files(form.into()).await {
+                                        Ok(_) => {
+                                            toasts.success("Files uploaded");
+                                            dropped_files.set(Vec::new());
+                                        }
+                                        Err(e) => {
+                                            toasts.error(format!("files failed to upload: {}", e));
+                                            leptos::logging::error!("upload failed: {e}");
+                                        }
                                     }
                                     uploading_files.set(false);
                                 });

@@ -4,6 +4,7 @@ use leptos_meta::Title;
 
 use crate::components::{
     dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
+    toast::Toasts,
 };
 
 #[derive(Clone)]
@@ -50,10 +51,12 @@ fn add_files(list: web_sys::FileList, dropped_files: RwSignal<Vec<DroppedFile>>)
 }
 #[component]
 pub fn Vault() -> impl IntoView {
+    let toasts = expect_context::<Toasts>();
     // Counter, not a bool: dragenter/dragleave fire for every child element,
     // so a bool would flicker as the cursor moves over the page.
     let drag_depth = RwSignal::new(0i32);
     let dropped_files = RwSignal::new(Vec::<DroppedFile>::new());
+    let uploading_files = RwSignal::new(false);
 
     let file_input = NodeRef::<leptos::html::Input>::new();
     // Effect = client-only, so this never runs during SSR
@@ -79,6 +82,10 @@ pub fn Vault() -> impl IntoView {
         let drop_h = window_event_listener(ev::drop, move |e| {
             e.prevent_default();
             drag_depth.set(0);
+            if uploading_files.get() {
+                toasts.error("cannot drop more files while uploading files");
+                return;
+            }
             let Some(list) = e.data_transfer().and_then(|dt| dt.files()) else {
                 return;
             };
@@ -128,6 +135,6 @@ pub fn Vault() -> impl IntoView {
         >
             <DroppingFilesOverlay />
         </div>
-        <DroppedFilesOverlay dropped_files=dropped_files />
+        <DroppedFilesOverlay dropped_files=dropped_files uploading_files=uploading_files />
     }
 }

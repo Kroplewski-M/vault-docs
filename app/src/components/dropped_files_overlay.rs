@@ -8,9 +8,12 @@ use leptos::reactive::spawn_local;
 use web_sys::FormData;
 
 #[component]
-pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl IntoView {
+pub fn DroppedFilesOverlay(
+    dropped_files: RwSignal<Vec<DroppedFile>>,
+    uploading_files: RwSignal<bool>,
+) -> impl IntoView {
     let toasts = expect_context::<Toasts>();
-    let uploading_files = RwSignal::new(false);
+
     view! {
         <div
             class="drop-overlay-files"

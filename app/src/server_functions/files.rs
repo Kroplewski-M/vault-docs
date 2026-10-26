@@ -1,3 +1,6 @@
+use std::thread::sleep;
+use std::time::Duration;
+
 use domain::files::UploadedFile;
 use leptos::prelude::*;
 use leptos::server_fn::codec::{MultipartData, MultipartFormData};
@@ -20,5 +23,6 @@ pub async fn upload_files(data: MultipartData) -> Result<(), ServerFnError> {
             leptos::logging::log!("received {} ({} bytes)", file.name(), file.size());
         }
     }
+    sleep(Duration::from_secs(10));
     Ok(())
 }

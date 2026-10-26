@@ -3,3 +3,4 @@ pub mod dropping_files_overlay;
 pub mod logo;
 pub mod navbar;
 pub mod svg;
+pub mod toast;

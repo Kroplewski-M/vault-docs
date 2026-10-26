@@ -1,4 +1,5 @@
 use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
+use crate::components::toast::Toasts;
 use crate::page::vault::DroppedFile;
 use crate::server_functions::files::upload_files;
 use domain::helpers::format_size;
@@ -8,6 +9,7 @@ use web_sys::FormData;
 
 #[component]
 pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl IntoView {
+    let toasts = expect_context::<Toasts>();
     let uploading_files = RwSignal::new(false);
     view! {
         <div
@@ -117,8 +119,14 @@ pub fn DroppedFilesOverlay(dropped_files: RwSignal<Vec<DroppedFile>>) -> impl In
                                     });
                                 spawn_local(async move {
                                     uploading_files.set(true);
-                                    if let Err(e) = upload_files(form.into()).await {
-                                        leptos::logging::error!("upload failed: {e}");
+                                    match upload_files(form.into()).await {
+                                        Ok(_) => {
+                                            toasts.success("Files uploaded");
+                                            dropped_files.set(Vec::new());
+                                        }
+                                        Err(e) => {
+                                            leptos::logging::error!("upload failed: {e}");
+                                        }
                                     }
                                     uploading_files.set(false);
                                 });

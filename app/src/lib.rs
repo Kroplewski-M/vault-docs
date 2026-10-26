@@ -6,7 +6,10 @@ use leptos_router::{
 };
 
 use crate::{
-    components::navbar::Navbar,
+    components::{
+        navbar::Navbar,
+        toast::{Toaster, Toasts},
+    },
     page::{home::Home, profile::Profile, vault::Vault},
     server_functions::user::get_current_user,
 };
@@ -44,6 +47,7 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
     let user = Resource::new(|| (), |_| get_current_user());
     provide_context(user);
+    provide_context(Toasts::new());
     view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
@@ -53,6 +57,7 @@ pub fn App() -> impl IntoView {
         <Title text="Vault Docs" />
         // content for this welcome page
         <Navbar />
+        <Toaster />
         <Router>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>

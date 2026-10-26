@@ -128,7 +128,7 @@ pub fn DroppedFilesOverlay(
                                             dropped_files.set(Vec::new());
                                         }
                                         Err(e) => {
-                                            toasts.error("Files uploaded");
+                                            toasts.error(format!("files failed to upload: {}", e));
                                             leptos::logging::error!("upload failed: {e}");
                                         }
                                     }

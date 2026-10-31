@@ -219,3 +219,12 @@ impl UploadedFile {
         }
     }
 }
+
+pub struct FileMetaData {
+    pub id: Uuid,
+    pub original_name: String,
+    pub ext: String,
+    pub mime_type: String,
+    pub size: i64,
+    pub user_id: Uuid,
+}

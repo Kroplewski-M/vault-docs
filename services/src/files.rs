@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use db::files::{FilesRepo, FilesRepoTrait};
 use domain::files::{FileMetaData, FileStatus, UploadedFile};
 use uuid::Uuid;
@@ -23,7 +25,11 @@ impl FileService {
             return Err(Error::InvalidFile(file.errors().to_vec()));
         };
         let file_name = &file.name().clone();
-        let base_file_name = file_name.split('.').next().unwrap_or(file_name);
+
+        let base_file_name = Path::new(file_name)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(file_name);
 
         let meta = FileMetaData {
             id: file.id,

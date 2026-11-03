@@ -3,6 +3,7 @@ use domain::files::{FileMetaData, FileStatus, UploadedFile};
 use uuid::Uuid;
 
 use crate::{Error, Result, error::internal};
+#[derive(Clone)]
 pub struct FileService {
     file_repo: FilesRepo,
 }
@@ -21,9 +22,12 @@ impl FileService {
         let FileStatus::Valid(format) = file.status() else {
             return Err(Error::InvalidFile(file.errors().to_vec()));
         };
+        let file_name = &file.name().clone();
+        let base_file_name = file_name.split('.').next().unwrap_or(file_name);
+
         let meta = FileMetaData {
             id: file.id,
-            original_name: file.name(),
+            original_name: base_file_name.to_string(),
             ext: format.extension().to_string(),
             mime_type: format.mime_type().to_string(),
             size: file.size(),

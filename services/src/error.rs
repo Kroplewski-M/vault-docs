@@ -1,13 +1,25 @@
 use core::fmt;
 
+use domain::files::UploadError;
+
 #[derive(Debug)]
 pub enum Error {
     Internal(String),
+    InvalidFile(Vec<UploadError>),
 }
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Internal(msg) => write!(f, "Internal error: {msg}"),
+            Error::InvalidFile(errors) => write!(
+                f,
+                "Invalid file: {}",
+                errors
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
         }
     }
 }

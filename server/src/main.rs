@@ -1,8 +1,8 @@
 use app::{App, shell};
 use axum::routing::{get, post};
-use db::{sessions::SessionRepo, users::UserRepo};
+use db::{files::FilesRepo, sessions::SessionRepo, users::UserRepo};
 use leptos::context::provide_context;
-use services::{session::SessionService, users::UserService};
+use services::{files::FileService, session::SessionService, users::UserService};
 
 use crate::{
     auth::AuthService,
@@ -39,6 +39,7 @@ async fn main() {
     db::migrate(&pool).await.expect("failed to run migrations");
 
     let users = UserService::new(UserRepo::new(pool.clone()));
+    let file_service = FileService::new(FilesRepo::new(pool.clone()));
     let session = SessionService::new(SessionRepo::new(pool)); // pool stops here
     let auth = AuthService::new(&config.cognito, users.clone(), session.clone()).await;
 
@@ -58,6 +59,7 @@ async fn main() {
             move || {
                 provide_context(session.clone());
                 provide_context(users.clone());
+                provide_context(file_service.clone());
             },
             move || shell(leptos_options.clone()),
         )

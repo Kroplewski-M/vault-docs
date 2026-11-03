@@ -1,4 +1,5 @@
 mod error;
+pub mod files;
 pub mod session;
 pub mod users;
 

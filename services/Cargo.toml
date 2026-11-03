@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 db = { path = "../db" }
+domain = { path = "../domain" }
 uuid = { workspace = true }
 chrono = { workspace = true }
 sqlx = { workspace = true }

@@ -113,7 +113,7 @@ pub fn DroppedFilesOverlay(
                                     .with(|files| {
                                         for f in files.iter().filter(|f| f.meta.is_valid()) {
                                             form.append_with_blob_and_filename(
-                                                    "file",
+                                                    &f.meta.id.to_string(),
                                                     &f.file,
                                                     &f.meta.name(),
                                                 )
@@ -122,17 +122,24 @@ pub fn DroppedFilesOverlay(
                                     });
                                 spawn_local(async move {
                                     uploading_files.set(true);
-                                    match upload_files(form.into()).await {
-                                        Ok(_) => {
-                                            toasts.success("Files uploaded");
-                                            dropped_files.set(Vec::new());
+                                    match upload_files(form.into()).await{
+                                    Ok(res)=>{
+                                        if res.iter().all(|f| f.error.is_none()){
+                                           toasts.success("files uploaded successfully"); 
                                         }
-                                        Err(e) => {
-                                            toasts.error(format!("files failed to upload: {}", e));
-                                            leptos::logging::error!("upload failed: {e}");
+                                        dropped_files.update(|f| {
+                                            f.retain(|file| !res.iter().any(|r| r.id == file.meta.id.to_string() && r.error.is_none()))
+                                        });                                  
+                                        for f in &res {
+                                            if let Some(err) = &f.error {
+                                            toasts.error(format!("failed uploading file: {}, error: {}", f.name, err));
+                                            }
                                         }
+                                    },
+                                    Err(e) => toasts.error(format!("failed to upload files: {e}")),
                                     }
                                     uploading_files.set(false);
+
                                 });
                             }
                         >

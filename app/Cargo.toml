@@ -17,6 +17,7 @@ axum = { version = "0.8.9", optional = true }
 web-sys = { workspace = true }
 js-sys = "0.3"
 wasm-bindgen-futures = "0.4"
+futures = "0.3.34"
 [features]
 hydrate = ["leptos/hydrate"]
 ssr = [

@@ -3,6 +3,7 @@ use crate::components::toast::Toasts;
 use crate::page::vault::DroppedFile;
 use crate::server_functions::files::upload_files;
 use domain::helpers::format_size;
+use futures::future::join_all;
 use leptos::prelude::*;
 use leptos::reactive::spawn_local;
 use web_sys::FormData;
@@ -108,42 +109,49 @@ pub fn DroppedFilesOverlay(
                             }
                             on:click=move |_| {
                                 dropped_files.update(|f| f.retain(|file| file.meta.is_valid()));
-                                for file in dropped_files.get() {
-                                    let form = FormData::new().unwrap();
-                                    form.append_with_blob_and_filename(
-                                            &file.meta.id.to_string(),
-                                            &file.file,
-                                            &file.meta.name(),
-                                        )
-                                        .unwrap();
-                                    spawn_local(async move {
-                                        uploading_files.set(true);
-                                        match upload_files(form.into()).await {
-                                            Ok(res) => {
-                                                if res.iter().all(|f| f.error.is_none()) {
-                                                    toasts
-                                                        .success(
-                                                            format!("{} uploaded successfully", file.meta.name()),
-                                                        );
-                                                }
-                                                dropped_files
-                                                    .update(|f| f.retain(|fx| fx.meta.id != file.meta.id));
-                                                for f in &res {
-                                                    if let Some(err) = &f.error {
+                                uploading_files.set(true);
+                                let files = dropped_files.get();
+                                spawn_local(async move {
+                                    let uploads = files
+                                        .into_iter()
+                                        .map(|file| async move {
+                                            let form = FormData::new().unwrap();
+                                            form.append_with_blob_and_filename(
+                                                    &file.meta.id.to_string(),
+                                                    &file.file,
+                                                    &file.meta.name(),
+                                                )
+                                                .unwrap();
+                                            match upload_files(form.into()).await {
+                                                Ok(res) => {
+                                                    if res.iter().all(|f| f.error.is_none()) {
                                                         toasts
-                                                            .error(
-                                                                format!("failed uploading file: {}, error: {}", f.name, err),
+                                                            .success(
+                                                                format!("{} uploaded successfully", file.meta.name()),
                                                             );
+                                                        dropped_files
+                                                            .update(|f| f.retain(|fx| fx.meta.id != file.meta.id));
+                                                    }
+                                                    for f in &res {
+                                                        if let Some(err) = &f.error {
+                                                            toasts
+                                                                .error(
+                                                                    format!("failed uploading file: {}, error: {}", f.name, err),
+                                                                );
+                                                        }
                                                     }
                                                 }
+                                                Err(e) => {
+                                                    toasts
+                                                        .error(
+                                                            format!("failed to upload file {}: {e}", file.meta.name()),
+                                                        )
+                                                }
                                             }
-                                            Err(e) => {
-                                                toasts.error(format!("failed to upload files: {e}"))
-                                            }
-                                        }
-                                    });
-                                }
-                                uploading_files.set(false);
+                                        });
+                                    join_all(uploads).await;
+                                    uploading_files.set(false);
+                                });
                             }
                         >
                             "Upload"

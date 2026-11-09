@@ -31,7 +31,7 @@ pub async fn session(
         && !path.starts_with("/api/public/")
         && req.extensions().get::<CurrentUser>().is_none()
     {
-        return StatusCode::UNAUTHORIZED.into_response();
+        return (StatusCode::UNAUTHORIZED, "Unauthorized").into_response();
     }
     next.run(req).await
 }

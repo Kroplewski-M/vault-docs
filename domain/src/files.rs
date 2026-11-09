@@ -228,3 +228,9 @@ pub struct FileMetaData {
     pub size: i64,
     pub user_id: Uuid,
 }
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct FileUploadResult {
+    pub id: String,
+    pub name: String,
+    pub error: Option<String>,
+}

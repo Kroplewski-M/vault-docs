@@ -4,7 +4,7 @@ use db::files::{FilesRepo, FilesRepoTrait};
 use domain::files::{FileMetaData, FileStatus, UploadedFile};
 use uuid::Uuid;
 
-use crate::{Error, Result, error::internal};
+use crate::{Error, Result, error::internal, s3_bucket::S3Bucket};
 #[derive(Clone)]
 pub struct FileService {
     file_repo: FilesRepo,
@@ -41,6 +41,11 @@ impl FileService {
         };
         // 1. encrypt  2. put to S3 under meta.id
         self.file_repo.insert_file(&meta).await.map_err(internal)?;
+        let bucket = S3Bucket::new().await;
+        bucket
+            .upload(&file.id.to_string(), bytes.to_vec())
+            .await
+            .map_err(internal)?;
         // if the insert fails, best-effort delete the S3 object so it isn't orphaned
         Ok(meta)
     }

@@ -2,7 +2,9 @@ use app::{App, shell};
 use axum::routing::{get, post};
 use db::{files::FilesRepo, sessions::SessionRepo, users::UserRepo};
 use leptos::context::provide_context;
-use services::{files::FileService, session::SessionService, users::UserService};
+use services::{
+    files::FileService, s3_bucket::S3BucketService, session::SessionService, users::UserService,
+};
 
 use crate::{
     auth::AuthService,
@@ -39,7 +41,8 @@ async fn main() {
     db::migrate(&pool).await.expect("failed to run migrations");
 
     let users = UserService::new(UserRepo::new(pool.clone()));
-    let file_service = FileService::new(FilesRepo::new(pool.clone()));
+    let s3_service = S3BucketService::new(config.s3_config.bucket_name.clone()).await;
+    let file_service = FileService::new(FilesRepo::new(pool.clone()), s3_service);
     let session = SessionService::new(SessionRepo::new(pool)); // pool stops here
     let auth = AuthService::new(&config.cognito, users.clone(), session.clone()).await;
 

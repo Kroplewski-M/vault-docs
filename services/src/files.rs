@@ -44,11 +44,27 @@ impl FileService {
             user_id,
         };
         // 1. encrypt  2. put to S3 under meta.id
-        self.file_repo.insert_file(&meta).await.map_err(internal)?;
-        self.s3_service
-            .upload(&file.id.to_string(), bytes.to_vec())
+        let file_id = self
+            .file_repo
+            .insert_file_metadata(&meta)
             .await
             .map_err(internal)?;
+
+        match self
+            .s3_service
+            .upload(&file.id.to_string(), bytes.to_vec())
+            .await
+        {
+            Ok(_) => {}
+            Err(err) => {
+                self.file_repo
+                    .delete_file_metadata(&file_id)
+                    .await
+                    .map_err(internal)?;
+                return Err(internal(err));
+            }
+        }
+
         // if the insert fails, best-effort delete the S3 object so it isn't orphaned
         Ok(meta)
     }

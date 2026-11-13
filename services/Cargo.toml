@@ -9,3 +9,5 @@ domain = { path = "../domain" }
 uuid = { workspace = true }
 chrono = { workspace = true }
 sqlx = { workspace = true }
+aws-config = "1.13.2"
+aws-sdk-s3 = "1.159.0"

@@ -13,12 +13,18 @@ pub struct CognitoConfig {
 }
 
 #[derive(Clone)]
+pub struct S3Config {
+    pub bucket_name: String,
+}
+
+#[derive(Clone)]
 pub struct Config {
     pub database_url: String,
     pub leptos_options: LeptosOptions,
     pub cookie_key: Key,
     pub secure_cookies: bool,
     pub cognito: CognitoConfig,
+    pub s3_config: S3Config,
 }
 
 fn env(name: &str) -> String {
@@ -45,6 +51,9 @@ impl Config {
                 domain: env("COGNITO_DOMAIN").trim_end_matches('/').to_string(),
                 redirect_uri: env("COGNITO_REDIRECT_URI"),
                 logout_redirect_uri: env("COGNITO_LOGOUT_REDIRECT_URI"),
+            },
+            s3_config: S3Config {
+                bucket_name: env("AWS_S3_BUCKET_NAME"),
             },
         }
     }

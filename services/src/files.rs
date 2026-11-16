@@ -65,7 +65,6 @@ impl FileService {
             }
         }
 
-        // if the insert fails, best-effort delete the S3 object so it isn't orphaned
         Ok(meta)
     }
 }

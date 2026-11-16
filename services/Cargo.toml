@@ -11,3 +11,4 @@ chrono = { workspace = true }
 sqlx = { workspace = true }
 aws-config = "1.13.2"
 aws-sdk-s3 = "1.159.0"
+aws-sdk-kms = "1.132.0"

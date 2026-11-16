@@ -1,5 +1,6 @@
-use aws_config::BehaviorVersion;
 use aws_sdk_s3::Client;
+
+use crate::load_aws_config;
 
 #[derive(Clone)]
 pub struct S3BucketService {
@@ -9,7 +10,7 @@ pub struct S3BucketService {
 
 impl S3BucketService {
     pub async fn new(bucket_name: String) -> Self {
-        let config = aws_config::load_defaults(BehaviorVersion::v2026_11_10()).await;
+        let config = load_aws_config().await;
         let client = Client::new(&config);
         Self {
             client,

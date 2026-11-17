@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use aws_sdk_s3::Client;
 
 use crate::load_aws_config;
@@ -6,6 +7,10 @@ use crate::load_aws_config;
 pub struct S3BucketService {
     client: Client,
     bucket_name: String,
+}
+#[async_trait]
+pub trait S3BucketServiceTrait: Send + Sync {
+    async fn upload(&self, key: &str, bytes: Vec<u8>) -> Result<(), aws_sdk_s3::Error>;
 }
 
 impl S3BucketService {
@@ -17,7 +22,10 @@ impl S3BucketService {
             bucket_name,
         }
     }
-    pub async fn upload(&self, key: &str, bytes: Vec<u8>) -> Result<(), aws_sdk_s3::Error> {
+}
+#[async_trait]
+impl S3BucketServiceTrait for S3BucketService {
+    async fn upload(&self, key: &str, bytes: Vec<u8>) -> Result<(), aws_sdk_s3::Error> {
         self.client
             .put_object()
             .bucket(&self.bucket_name)

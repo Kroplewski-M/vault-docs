@@ -4312,6 +4312,7 @@ dependencies = [
 name = "services"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "aws-config",
  "aws-sdk-kms",
  "aws-sdk-s3",

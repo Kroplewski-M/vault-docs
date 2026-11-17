@@ -14,6 +14,7 @@ sqlx = { version = "0.9.0", features = [
   "chrono",
   "uuid",
 ] }
+async-trait = "0.1.92"
 web-sys = { version = "0.3", features = [
   "DataTransfer",
   "DataTransferItem",

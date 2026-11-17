@@ -220,6 +220,7 @@ impl UploadedFile {
     }
 }
 
+#[derive(Debug)]
 pub struct FileMetaData {
     pub id: Uuid,
     pub original_name: String,
@@ -304,7 +305,10 @@ mod tests {
     #[test]
     fn extension_round_trips_for_all_formats() {
         for format in FileFormat::ALL {
-            assert_eq!(FileFormat::from_extension(format.extension()), Some(*format));
+            assert_eq!(
+                FileFormat::from_extension(format.extension()),
+                Some(*format)
+            );
         }
     }
 

@@ -3,7 +3,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::helpers::format_size;
+use crate::{helpers::format_size, models::EncVersion};
 
 /// Default max file size: 15 MiB
 pub const DEFAULT_MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
@@ -228,6 +228,9 @@ pub struct FileMetaData {
     pub mime_type: String,
     pub size: i64,
     pub user_id: Uuid,
+    pub enc_key: Vec<u8>,
+    pub nonce: Vec<u8>,
+    pub enc_version: EncVersion,
 }
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct FileUploadResult {

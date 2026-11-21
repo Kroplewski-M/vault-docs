@@ -12,3 +12,9 @@ pub struct User {
 pub struct CurrentUser {
     pub id: Uuid,
 }
+
+#[derive(Debug, Clone)]
+pub enum EncVersion {
+    ///AES-256-GCM
+    V1 = 1,
+}

@@ -5,7 +5,8 @@ use axum::routing::{get, post};
 use db::{files::FilesRepo, sessions::SessionRepo, users::UserRepo};
 use leptos::context::provide_context;
 use services::{
-    files::FileService, s3_bucket::S3BucketService, session::SessionService, users::UserService,
+    files::FileService, kms::Kms, s3_bucket::S3BucketService, session::SessionService,
+    users::UserService,
 };
 
 use crate::{
@@ -44,8 +45,12 @@ async fn main() {
 
     let users = UserService::new(UserRepo::new(pool.clone()));
     let s3_service = S3BucketService::new(config.s3_config.bucket_name.clone()).await;
-    let file_service =
-        FileService::new(Arc::new(FilesRepo::new(pool.clone())), Arc::new(s3_service));
+    let kms_service = Kms::new(config.kms_config.key_name.clone()).await;
+    let file_service = FileService::new(
+        Arc::new(FilesRepo::new(pool.clone())),
+        Arc::new(s3_service),
+        Arc::new(kms_service),
+    );
     let session = SessionService::new(SessionRepo::new(pool)); // pool stops here
     let auth = AuthService::new(&config.cognito, users.clone(), session.clone()).await;
 

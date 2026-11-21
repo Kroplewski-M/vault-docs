@@ -16,6 +16,10 @@ pub struct CognitoConfig {
 pub struct S3Config {
     pub bucket_name: String,
 }
+#[derive(Clone)]
+pub struct KmsConfig {
+    pub key_name: String,
+}
 
 #[derive(Clone)]
 pub struct Config {
@@ -25,6 +29,7 @@ pub struct Config {
     pub secure_cookies: bool,
     pub cognito: CognitoConfig,
     pub s3_config: S3Config,
+    pub kms_config: KmsConfig,
 }
 
 fn env(name: &str) -> String {
@@ -54,6 +59,9 @@ impl Config {
             },
             s3_config: S3Config {
                 bucket_name: env("AWS_S3_BUCKET_NAME"),
+            },
+            kms_config: KmsConfig {
+                key_name: env("AWS_KMS_KEY_ID"),
             },
         }
     }

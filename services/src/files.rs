@@ -1,24 +1,33 @@
 use std::{path::Path, sync::Arc};
 
+use aes_gcm::{Aes256Gcm, Nonce, aead::Generate};
 use db::files::FilesRepoTrait;
-use domain::files::{FileMetaData, FileStatus, UploadedFile};
+use domain::{
+    files::{FileMetaData, FileStatus, UploadedFile},
+    models::EncVersion,
+};
 use uuid::Uuid;
 
-use crate::{Error, Result, error::internal, s3_bucket::S3BucketServiceTrait};
+use crate::{
+    Error, Result, error::internal, kms::KmsServiceTrait, s3_bucket::S3BucketServiceTrait,
+};
 #[derive(Clone)]
 pub struct FileService {
     file_repo: Arc<dyn FilesRepoTrait>,
     s3_service: Arc<dyn S3BucketServiceTrait>,
+    kms_service: Arc<dyn KmsServiceTrait>,
 }
 
 impl FileService {
     pub fn new(
         file_repo: Arc<dyn FilesRepoTrait>,
         s3_service: Arc<dyn S3BucketServiceTrait>,
+        kms_service: Arc<dyn KmsServiceTrait>,
     ) -> Self {
         Self {
             file_repo,
             s3_service,
+            kms_service,
         }
     }
     pub async fn upload_file(
@@ -38,6 +47,14 @@ impl FileService {
             .and_then(|s| s.to_str())
             .unwrap_or(file_name);
 
+        let key = self
+            .kms_service
+            .generate_data_key(&file.id.to_string())
+            .await
+            .map_err(internal)?;
+
+        let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::generate();
+
         let meta = FileMetaData {
             id: file.id,
             original_name: base_file_name.to_string(),
@@ -45,7 +62,11 @@ impl FileService {
             mime_type: format.mime_type().to_string(),
             size: file.size(),
             user_id,
+            enc_key: key.encrypted,
+            nonce: nonce.to_vec(),
+            enc_version: EncVersion::V1,
         };
+
         // 1. encrypt  2. put to S3 under meta.id
         let file_id = self
             .file_repo
@@ -75,6 +96,8 @@ impl FileService {
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
+
+    use crate::kms::DataKey;
 
     use super::*;
     use aws_sdk_s3::types::error::NoSuchBucket;
@@ -111,8 +134,38 @@ mod tests {
         }
     }
 
+    #[derive(Default)]
+    struct FakeKms {
+        generated: Mutex<Vec<String>>, // doc_ids passed to generate_data_key
+    }
+    #[async_trait::async_trait]
+    impl KmsServiceTrait for FakeKms {
+        async fn generate_data_key(
+            &self,
+            doc_id: &str,
+        ) -> std::result::Result<DataKey, aws_sdk_kms::Error> {
+            self.generated.lock().unwrap().push(doc_id.to_string());
+            Ok(DataKey {
+                plain_text: vec![7u8; 32], // fixed 32-byte key (AES-256)
+                encrypted: format!("enc:{doc_id}").into_bytes(), // fake wrapped key
+            })
+        }
+
+        async fn decrypt_data_key(
+            &self,
+            _doc_id: &str,
+            _encrypted: &[u8],
+        ) -> std::result::Result<Vec<u8>, aws_sdk_kms::Error> {
+            Ok(vec![7u8; 32])
+        }
+    }
+
     fn service(pool: PgPool, s3: Arc<FakeS3>) -> FileService {
-        FileService::new(Arc::new(FilesRepo::new(pool)), s3)
+        FileService::new(
+            Arc::new(FilesRepo::new(pool)),
+            s3,
+            Arc::new(FakeKms::default()),
+        )
     }
 
     // files.user_id references users(id), so every upload needs a user first

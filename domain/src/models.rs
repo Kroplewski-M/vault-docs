@@ -20,3 +20,8 @@ pub enum EncVersion {
     /// AES-256-GCM
     V1 = 1,
 }
+#[derive(Clone, Debug)]
+pub struct DataKey {
+    pub plain_text: Vec<u8>,
+    pub encrypted: Vec<u8>,
+}

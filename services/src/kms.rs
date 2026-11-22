@@ -1,14 +1,9 @@
 use async_trait::async_trait;
 use aws_sdk_kms::Client;
 use aws_sdk_s3::primitives::Blob;
+use domain::models::DataKey;
 
 use crate::load_aws_config;
-
-#[derive(Clone, Debug)]
-pub struct DataKey {
-    pub plain_text: Vec<u8>,
-    pub encrypted: Vec<u8>,
-}
 
 #[derive(Clone)]
 pub struct Kms {

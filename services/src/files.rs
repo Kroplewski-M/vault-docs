@@ -6,7 +6,7 @@ use aes_gcm::{
 };
 use db::files::FilesRepoTrait;
 use domain::{
-    files::{FileMetaData, FileStatus, UploadedFile},
+    files::{EncryptedFileMetaData, FileMetaData, FileStatus, UploadedFile},
     models::EncVersion,
 };
 use uuid::Uuid;
@@ -33,6 +33,31 @@ impl FileService {
             kms_service,
         }
     }
+    pub async fn encrypt_file(&self, bytes: &[u8], file_id: Uuid) -> Result<EncryptedFileMetaData> {
+        let key = self
+            .kms_service
+            .generate_data_key(&file_id.to_string())
+            .await
+            .map_err(internal)?;
+        let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::generate();
+        let cipher = Aes256Gcm::new_from_slice(&key.plain_text).map_err(internal)?;
+        let encrypted_file = cipher
+            .encrypt(
+                &nonce,
+                Payload {
+                    msg: bytes,
+                    aad: file_id.as_bytes(),
+                },
+            )
+            .map_err(internal)?;
+
+        Ok(EncryptedFileMetaData {
+            bytes: encrypted_file,
+            nonce: nonce.to_vec(),
+            encryption_key: key,
+            enc_version: EncVersion::V1,
+        })
+    }
     pub async fn upload_file(
         &self,
         user_id: Uuid,
@@ -50,24 +75,7 @@ impl FileService {
             .and_then(|s| s.to_str())
             .unwrap_or(file_name);
 
-        let key = self
-            .kms_service
-            .generate_data_key(&file.id.to_string())
-            .await
-            .map_err(internal)?;
-
-        //TODO MAKE NEXT 3 lines into a service i can just call
-        let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::generate();
-        let cipher = Aes256Gcm::new_from_slice(&key.plain_text).map_err(internal)?;
-        let encrypted_file = cipher
-            .encrypt(
-                &nonce,
-                Payload {
-                    msg: bytes,
-                    aad: file.id.as_bytes(),
-                },
-            )
-            .map_err(internal)?;
+        let encrypted_file = self.encrypt_file(bytes, file.id).await.map_err(internal)?;
 
         let meta = FileMetaData {
             id: file.id,
@@ -76,9 +84,9 @@ impl FileService {
             mime_type: format.mime_type().to_string(),
             size: file.size(),
             user_id,
-            enc_key: key.encrypted,
-            nonce: nonce.to_vec(),
-            enc_version: EncVersion::V1,
+            enc_key: encrypted_file.encryption_key.encrypted,
+            nonce: encrypted_file.nonce,
+            enc_version: encrypted_file.enc_version,
         };
 
         // 1. encrypt  2. put to S3 under meta.id
@@ -90,7 +98,7 @@ impl FileService {
 
         match self
             .s3_service
-            .upload(&file.id.to_string(), encrypted_file)
+            .upload(&file.id.to_string(), encrypted_file.bytes)
             .await
         {
             Ok(_) => {}
@@ -111,15 +119,13 @@ impl FileService {
 mod tests {
     use std::sync::Mutex;
 
-    use crate::kms::DataKey;
-
     use super::*;
     use aws_sdk_s3::types::error::NoSuchBucket;
     use db::{
         files::FilesRepo,
         users::{UserRepo, UserRepoTrait},
     };
-    use domain::files::UploadError;
+    use domain::{files::UploadError, models::DataKey};
     use sqlx::PgPool;
 
     const PDF_BYTES: &[u8] = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n";

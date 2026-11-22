@@ -56,6 +56,7 @@ impl FileService {
             .await
             .map_err(internal)?;
 
+        //TODO MAKE NEXT 3 lines into a service i can just call
         let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::generate();
         let cipher = Aes256Gcm::new_from_slice(&key.plain_text).map_err(internal)?;
         let encrypted_file = cipher

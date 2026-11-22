@@ -1,6 +1,9 @@
 use std::{path::Path, sync::Arc};
 
-use aes_gcm::{Aes256Gcm, Nonce, aead::Generate};
+use aes_gcm::{
+    Aes256Gcm, KeyInit, Nonce,
+    aead::{Aead, Generate, Payload},
+};
 use db::files::FilesRepoTrait;
 use domain::{
     files::{FileMetaData, FileStatus, UploadedFile},
@@ -54,6 +57,16 @@ impl FileService {
             .map_err(internal)?;
 
         let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::generate();
+        let cipher = Aes256Gcm::new_from_slice(&key.plain_text).map_err(internal)?;
+        let encrypted_file = cipher
+            .encrypt(
+                &nonce,
+                Payload {
+                    msg: bytes,
+                    aad: file.id.as_bytes(),
+                },
+            )
+            .map_err(internal)?;
 
         let meta = FileMetaData {
             id: file.id,
@@ -76,7 +89,7 @@ impl FileService {
 
         match self
             .s3_service
-            .upload(&file.id.to_string(), bytes.to_vec())
+            .upload(&file.id.to_string(), encrypted_file)
             .await
         {
             Ok(_) => {}

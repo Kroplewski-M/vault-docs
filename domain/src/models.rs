@@ -13,8 +13,10 @@ pub struct CurrentUser {
     pub id: Uuid,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "sqlx", derive(sqlx::Type))]
+#[repr(i16)] // SMALLINT
 pub enum EncVersion {
-    ///AES-256-GCM
+    /// AES-256-GCM
     V1 = 1,
 }

@@ -36,7 +36,7 @@ impl FilesRepoTrait for FilesRepo {
         .bind(file.user_id)
         .bind(&file.enc_key)
         .bind(&file.nonce)
-        .bind(&file.enc_key)
+        .bind(file.enc_version)
         .fetch_one(&self.pool)
         .await?;
 

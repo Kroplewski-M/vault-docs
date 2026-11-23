@@ -134,7 +134,7 @@ mod tests {
     #[derive(Default)]
     struct FakeS3 {
         fail: bool,
-        uploaded: Mutex<Vec<String>>,
+        uploaded: Mutex<Vec<(String, Vec<u8>)>>, // (key, bytes) passed to upload
     }
 
     #[async_trait::async_trait]
@@ -142,9 +142,9 @@ mod tests {
         async fn upload(
             &self,
             key: &str,
-            _bytes: Vec<u8>,
+            bytes: Vec<u8>,
         ) -> std::result::Result<(), aws_sdk_s3::Error> {
-            self.uploaded.lock().unwrap().push(key.to_string());
+            self.uploaded.lock().unwrap().push((key.to_string(), bytes));
             if self.fail {
                 return Err(aws_sdk_s3::Error::NoSuchBucket(
                     NoSuchBucket::builder().build(),
@@ -288,7 +288,53 @@ mod tests {
             .unwrap();
 
         assert_eq!(file_count(&pool).await, 1);
-        assert_eq!(*s3.uploaded.lock().unwrap(), vec![meta.id.to_string()]);
+        let keys: Vec<String> = s3
+            .uploaded
+            .lock()
+            .unwrap()
+            .iter()
+            .map(|(k, _)| k.clone())
+            .collect();
+        assert_eq!(keys, vec![meta.id.to_string()]);
+    }
+
+    #[sqlx::test(migrations = "../migrations")]
+    async fn uploaded_bytes_decrypt_with_saved_fields(pool: PgPool) {
+        let s3 = Arc::new(FakeS3::default());
+        let meta = service(pool.clone(), s3.clone())
+            .upload_file(user(&pool).await, "notes.md".into(), TEXT_BYTES)
+            .await
+            .unwrap();
+
+        let (encrypted_key, nonce, enc_version): (Vec<u8>, Vec<u8>, i16) = sqlx::query_as(
+            "SELECT encrypted_key, nonce, enc_version FROM files WHERE id = $1",
+        )
+        .bind(meta.id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert_eq!(encrypted_key, format!("enc:{}", meta.id).into_bytes());
+        assert_eq!(nonce.len(), 12);
+        assert_eq!(enc_version, EncVersion::V1 as i16);
+
+        let stored = s3.uploaded.lock().unwrap()[0].1.clone();
+        assert_ne!(stored, TEXT_BYTES);
+
+        let cipher = Aes256Gcm::new_from_slice(&[7u8; 32]).unwrap();
+        let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::try_from(nonce.as_slice()).unwrap();
+        let decrypt = |aad: &[u8]| {
+            cipher.decrypt(
+                &nonce,
+                Payload {
+                    msg: &stored,
+                    aad,
+                },
+            )
+        };
+
+        assert_eq!(decrypt(meta.id.as_bytes()).unwrap(), TEXT_BYTES);
+        // ciphertext is bound to its file id
+        assert!(decrypt(Uuid::new_v4().as_bytes()).is_err());
     }
 
     #[sqlx::test(migrations = "../migrations")]

@@ -24,8 +24,8 @@ pub trait FilesRepoTrait: Send + Sync {
 impl FilesRepoTrait for FilesRepo {
     async fn insert_file_metadata(&self, file: &FileMetaData) -> Result<Uuid, sqlx::Error> {
         let id = sqlx::query_scalar(
-            "INSERT INTO files (id, original_name, ext, mime_type, size, user_id)
-                    VALUES ($1,$2,$3,$4,$5,$6)
+            "INSERT INTO files (id, original_name, ext, mime_type, size, user_id, encrypted_key, nonce, enc_version)
+                    VALUES ($1,$2,$3,$4,$5,$6, $7, $8, $9)
             RETURNING id",
         )
         .bind(file.id)
@@ -34,6 +34,9 @@ impl FilesRepoTrait for FilesRepo {
         .bind(&file.mime_type)
         .bind(file.size)
         .bind(file.user_id)
+        .bind(&file.enc_key)
+        .bind(&file.nonce)
+        .bind(file.enc_version)
         .fetch_one(&self.pool)
         .await?;
 
@@ -49,6 +52,8 @@ impl FilesRepoTrait for FilesRepo {
 }
 #[cfg(test)]
 mod tests {
+    use domain::models::EncVersion;
+
     use super::*;
     use crate::users::{UserRepo, UserRepoTrait};
 
@@ -70,6 +75,9 @@ mod tests {
             mime_type: "text/markdown".into(),
             size: 42,
             user_id,
+            enc_key: Vec::<u8>::new(),
+            nonce: Vec::<u8>::new(),
+            enc_version: EncVersion::V1,
         }
     }
 

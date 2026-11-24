@@ -1,15 +1,23 @@
-use domain::files::FileUploadResult;
+use domain::files::{FileUploadResult, UserFile};
+#[cfg(feature = "ssr")]
+use domain::models::CurrentUser;
 use leptos::prelude::*;
 use leptos::server_fn::codec::{MultipartData, MultipartFormData};
 
+#[cfg(feature = "ssr")]
+pub async fn require_user() -> Result<CurrentUser, ServerFnError> {
+    use crate::server_functions::user::get_current_user;
+
+    get_current_user()
+        .await?
+        .ok_or_else(|| ServerFnError::new("unauthorized"))
+}
+
 #[server(input = MultipartFormData)]
 pub async fn upload_files(data: MultipartData) -> Result<Vec<FileUploadResult>, ServerFnError> {
-    use crate::server_functions::user::get_current_user;
     use services::files::FileService;
 
-    let Some(user) = get_current_user().await? else {
-        return Err(ServerFnError::new("unauthorized"));
-    };
+    let user = require_user().await?;
 
     let mut results = Vec::<FileUploadResult>::new();
 
@@ -38,4 +46,18 @@ pub async fn upload_files(data: MultipartData) -> Result<Vec<FileUploadResult>, 
         results.push(FileUploadResult { id, name, error });
     }
     Ok(results)
+}
+
+#[server]
+pub async fn get_file_metadata_for_user() -> Result<Vec<UserFile>, ServerFnError> {
+    use services::files::FileService;
+
+    let user = require_user().await?;
+
+    let file_service = expect_context::<FileService>();
+
+    file_service
+        .fetch_user_files(&user.id)
+        .await
+        .map_err(ServerFnError::new)
 }

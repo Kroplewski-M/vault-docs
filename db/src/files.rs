@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use domain::files::FileMetaData;
+use domain::files::{FileMetaData, UserFile};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -18,10 +18,29 @@ impl FilesRepo {
 pub trait FilesRepoTrait: Send + Sync {
     async fn insert_file_metadata(&self, file: &FileMetaData) -> Result<Uuid, sqlx::Error>;
     async fn delete_file_metadata(&self, id: &Uuid) -> Result<(), sqlx::Error>;
+    async fn get_files_metadata_for_user(
+        &self,
+        user_id: &Uuid,
+    ) -> Result<Vec<UserFile>, sqlx::Error>;
 }
 
 #[async_trait]
 impl FilesRepoTrait for FilesRepo {
+    async fn get_files_metadata_for_user(
+        &self,
+        user_id: &Uuid,
+    ) -> Result<Vec<UserFile>, sqlx::Error> {
+        let files: Vec<UserFile> = sqlx::query_as(
+            "SELECT id, original_name || '.' || ext AS full_name, size 
+             from files 
+             WHERE user_id = $1",
+        )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(files)
+    }
+
     async fn insert_file_metadata(&self, file: &FileMetaData) -> Result<Uuid, sqlx::Error> {
         let id = sqlx::query_scalar(
             "INSERT INTO files (id, original_name, ext, mime_type, size, user_id, encrypted_key, nonce, enc_version)

@@ -1,12 +1,12 @@
 use std::{path::Path, sync::Arc};
 
 use aes_gcm::{
-    Aes256Gcm, KeyInit, Nonce,
+    Aes256Gcm, KeyInit,
     aead::{Aead, Generate, Payload},
 };
 use db::files::FilesRepoTrait;
 use domain::{
-    files::{EncryptedFileMetaData, FileMetaData, FileStatus, UploadedFile},
+    files::{EncryptedFileMetaData, FileMetaData, FileStatus, UploadedFile, UserFile},
     models::EncVersion,
 };
 use uuid::Uuid;
@@ -32,6 +32,12 @@ impl FileService {
             s3_service,
             kms_service,
         }
+    }
+    pub async fn fetch_user_files(&self, user_id: &Uuid) -> Result<Vec<UserFile>> {
+        self.file_repo
+            .get_files_metadata_for_user(user_id)
+            .await
+            .map_err(internal)
     }
     pub async fn encrypt_file(&self, bytes: &[u8], file_id: Uuid) -> Result<EncryptedFileMetaData> {
         let key = self
@@ -306,13 +312,12 @@ mod tests {
             .await
             .unwrap();
 
-        let (encrypted_key, nonce, enc_version): (Vec<u8>, Vec<u8>, i16) = sqlx::query_as(
-            "SELECT encrypted_key, nonce, enc_version FROM files WHERE id = $1",
-        )
-        .bind(meta.id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+        let (encrypted_key, nonce, enc_version): (Vec<u8>, Vec<u8>, i16) =
+            sqlx::query_as("SELECT encrypted_key, nonce, enc_version FROM files WHERE id = $1")
+                .bind(meta.id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert_eq!(encrypted_key, format!("enc:{}", meta.id).into_bytes());
         assert_eq!(nonce.len(), 12);
         assert_eq!(enc_version, EncVersion::V1 as i16);
@@ -322,15 +327,7 @@ mod tests {
 
         let cipher = Aes256Gcm::new_from_slice(&[7u8; 32]).unwrap();
         let nonce = aes_gcm::aead::Nonce::<Aes256Gcm>::try_from(nonce.as_slice()).unwrap();
-        let decrypt = |aad: &[u8]| {
-            cipher.decrypt(
-                &nonce,
-                Payload {
-                    msg: &stored,
-                    aad,
-                },
-            )
-        };
+        let decrypt = |aad: &[u8]| cipher.decrypt(&nonce, Payload { msg: &stored, aad });
 
         assert_eq!(decrypt(meta.id.as_bytes()).unwrap(), TEXT_BYTES);
         // ciphertext is bound to its file id

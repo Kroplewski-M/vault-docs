@@ -4,7 +4,7 @@ use leptos_meta::Title;
 
 use crate::components::{
     dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
-    toast::Toasts,
+    file_view::FileView, toast::Toasts,
 };
 
 #[derive(Clone)]
@@ -136,5 +136,6 @@ pub fn Vault() -> impl IntoView {
             <DroppingFilesOverlay />
         </div>
         <DroppedFilesOverlay dropped_files=dropped_files uploading_files=uploading_files />
+        <FileView />
     }
 }

@@ -223,6 +223,13 @@ impl UploadedFile {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "sqlx", derive(sqlx::FromRow))]
+pub struct UserFile {
+    pub id: Uuid,
+    pub full_name: String,
+    pub size: i64,
+}
 #[derive(Debug)]
 pub struct FileMetaData {
     pub id: Uuid,

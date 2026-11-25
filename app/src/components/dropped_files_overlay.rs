@@ -2,6 +2,7 @@ use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
 use crate::components::toast::Toasts;
 use crate::page::vault::DroppedFile;
 use crate::server_functions::files::upload_files;
+use domain::files::UserFile;
 use domain::helpers::format_size;
 use futures::future::join_all;
 use leptos::prelude::*;
@@ -12,6 +13,7 @@ use web_sys::FormData;
 pub fn DroppedFilesOverlay(
     dropped_files: RwSignal<Vec<DroppedFile>>,
     uploading_files: RwSignal<bool>,
+    loaded_files: Resource<Result<Vec<UserFile>, ServerFnError>>,
 ) -> impl IntoView {
     let toasts = expect_context::<Toasts>();
 
@@ -131,6 +133,14 @@ pub fn DroppedFilesOverlay(
                                                             );
                                                         dropped_files
                                                             .update(|f| f.retain(|fx| fx.meta.id != file.meta.id));
+                                                        for uploaded in res.iter().filter_map(|r| r.file.clone()) {
+                                                            loaded_files
+                                                                .update(|r| {
+                                                                    if let Some(Ok(list)) = r {
+                                                                        list.push(uploaded);
+                                                                    }
+                                                                });
+                                                        }
                                                     }
                                                     for f in &res {
                                                         if let Some(err) = &f.error {

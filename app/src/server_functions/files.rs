@@ -34,16 +34,30 @@ pub async fn upload_files(data: MultipartData) -> Result<Vec<FileUploadResult>, 
         let id = field.name().unwrap_or_default().to_string();
         let name = field.file_name().unwrap_or_default().to_string();
 
-        let error = match field.bytes().await {
-            Err(e) => Some(format!("failed to read file: {e}")),
-            Ok(bytes) => file_service
+        let (error, file) = match field.bytes().await {
+            Err(e) => (Some(format!("failed to read file: {e}")), None),
+            Ok(bytes) => match file_service
                 .upload_file(user.id, name.clone(), &bytes)
                 .await
-                .err()
-                .map(|e| e.to_string()),
+            {
+                Ok(meta) => (
+                    None,
+                    Some(UserFile {
+                        id: meta.id,
+                        full_name: format!("{}.{}", meta.original_name, meta.ext),
+                        size: meta.size,
+                    }),
+                ),
+                Err(e) => (Some(e.to_string()), None),
+            },
         };
 
-        results.push(FileUploadResult { id, name, error });
+        results.push(FileUploadResult {
+            id,
+            name,
+            error,
+            file,
+        });
     }
     Ok(results)
 }

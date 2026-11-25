@@ -254,6 +254,7 @@ pub struct FileUploadResult {
     pub id: String,
     pub name: String,
     pub error: Option<String>,
+    pub file: Option<UserFile>,
 }
 
 #[cfg(test)]

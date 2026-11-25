@@ -441,6 +441,31 @@ main {
   color: $text-primary;
 }
 
+.empty_files {
+  position: fixed;
+  inset: $nav-height 0 0 0; // the area below the nav
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: $text-muted;
+  pointer-events: none; // clicks still reach the page underneath
+
+  svg {
+    width: 160px;
+    height: 160px;
+    color: $brand-bright;
+  }
+
+  p {
+    margin: 0;
+    font-family: $font-heading;
+    font-size: 1.5rem;
+  }
+}
+
+
 .toaster {
   position: fixed;
   bottom: 1rem;

@@ -133,13 +133,25 @@ pub fn DroppedFilesOverlay(
                                                             );
                                                         dropped_files
                                                             .update(|f| f.retain(|fx| fx.meta.id != file.meta.id));
-                                                        for uploaded in res.iter().filter_map(|r| r.file.clone()) {
-                                                            loaded_files
-                                                                .update(|r| {
-                                                                    if let Some(Ok(list)) = r {
-                                                                        list.push(uploaded);
+                                                        let uploaded: Vec<UserFile> = res
+                                                            .iter()
+                                                            .filter_map(|r| r.file.clone())
+                                                            .collect();
+                                                        let appended = loaded_files
+                                                            .try_maybe_update(|r| match r {
+                                                                Some(Ok(list)) => {
+                                                                    for file in uploaded {
+                                                                        if !list.iter().any(|f| f.id == file.id) {
+                                                                            list.push(file);
+                                                                        }
                                                                     }
-                                                                });
+                                                                    (true, true)
+                                                                }
+                                                                _ => (false, false),
+                                                            })
+                                                            .unwrap_or(false);
+                                                        if !appended {
+                                                            loaded_files.refetch();
                                                         }
                                                     }
                                                     for f in &res {

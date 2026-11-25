@@ -2,9 +2,12 @@ use domain::files::{FileFormat, UploadedFile};
 use leptos::{ev, prelude::*};
 use leptos_meta::Title;
 
-use crate::components::{
-    dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
-    file_view::FileView, toast::Toasts,
+use crate::{
+    components::{
+        dropped_files_overlay::DroppedFilesOverlay, dropping_files_overlay::DroppingFilesOverlay,
+        files_view::FileView, toast::Toasts,
+    },
+    server_functions::files::get_file_metadata_for_user,
 };
 
 #[derive(Clone)]
@@ -57,6 +60,7 @@ pub fn Vault() -> impl IntoView {
     let drag_depth = RwSignal::new(0i32);
     let dropped_files = RwSignal::new(Vec::<DroppedFile>::new());
     let uploading_files = RwSignal::new(false);
+    let files = Resource::new(|| (), |_| get_file_metadata_for_user());
 
     let file_input = NodeRef::<leptos::html::Input>::new();
     // Effect = client-only, so this never runs during SSR
@@ -135,7 +139,11 @@ pub fn Vault() -> impl IntoView {
         >
             <DroppingFilesOverlay />
         </div>
-        <DroppedFilesOverlay dropped_files=dropped_files uploading_files=uploading_files />
-        <FileView />
+        <DroppedFilesOverlay
+            dropped_files=dropped_files
+            uploading_files=uploading_files
+            loaded_files=files
+        />
+        <FileView files />
     }
 }

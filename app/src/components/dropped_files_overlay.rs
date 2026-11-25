@@ -2,6 +2,7 @@ use crate::components::svg::{cross::CrossIcon, tick::TickIcon};
 use crate::components::toast::Toasts;
 use crate::page::vault::DroppedFile;
 use crate::server_functions::files::upload_files;
+use domain::files::UserFile;
 use domain::helpers::format_size;
 use futures::future::join_all;
 use leptos::prelude::*;
@@ -12,6 +13,7 @@ use web_sys::FormData;
 pub fn DroppedFilesOverlay(
     dropped_files: RwSignal<Vec<DroppedFile>>,
     uploading_files: RwSignal<bool>,
+    loaded_files: Resource<Result<Vec<UserFile>, ServerFnError>>,
 ) -> impl IntoView {
     let toasts = expect_context::<Toasts>();
 
@@ -131,6 +133,26 @@ pub fn DroppedFilesOverlay(
                                                             );
                                                         dropped_files
                                                             .update(|f| f.retain(|fx| fx.meta.id != file.meta.id));
+                                                        let uploaded: Vec<UserFile> = res
+                                                            .iter()
+                                                            .filter_map(|r| r.file.clone())
+                                                            .collect();
+                                                        let appended = loaded_files
+                                                            .try_maybe_update(|r| match r {
+                                                                Some(Ok(list)) => {
+                                                                    for file in uploaded {
+                                                                        if !list.iter().any(|f| f.id == file.id) {
+                                                                            list.push(file);
+                                                                        }
+                                                                    }
+                                                                    (true, true)
+                                                                }
+                                                                _ => (false, false),
+                                                            })
+                                                            .unwrap_or(false);
+                                                        if !appended {
+                                                            loaded_files.refetch();
+                                                        }
                                                     }
                                                     for f in &res {
                                                         if let Some(err) = &f.error {

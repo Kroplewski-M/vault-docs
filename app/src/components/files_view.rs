@@ -14,12 +14,18 @@ pub fn FileView(files: Resource<Result<Vec<UserFile>, ServerFnError>>) -> impl I
                     Ok(files) => {
                         view! {
                             {if !files.is_empty() {
-                                files
-                                    .into_iter()
-                                    .map(|f| view! { <FileInfo file=f /> })
-                                    .collect_view()
+                                view! {
+                                    <div class="files">
+                                        {files
+                                            .into_iter()
+                                            .map(|f| view! { <FileInfo file=f /> })
+                                            .collect_view()
+                                            .into_any()}
+                                    </div>
+                                }
                                     .into_any()
                             } else {
+
                                 view! {
                                     <div class="empty_files">
                                         <EmptyFilesIcon />
@@ -31,11 +37,7 @@ pub fn FileView(files: Resource<Result<Vec<UserFile>, ServerFnError>>) -> impl I
                         }
                             .into_any()
                     }
-                    Err(e) => {
-
-                        view! { <p>"Error: " {e.to_string()}</p> }
-                            .into_any()
-                    }
+                    Err(e) => view! { <p>"Error: " {e.to_string()}</p> }.into_any(),
                 }
             })}
         </Suspense>

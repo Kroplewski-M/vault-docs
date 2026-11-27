@@ -12,8 +12,9 @@ pub fn FileInfo(file: UserFile) -> impl IntoView {
         .and_then(|ext| ext.to_str())
         .unwrap_or("")
         .to_lowercase();
+    let name = file.full_name.clone();
     view! {
-        <div class="file">
+        <div title=name.clone() class="file">
             {if file_ext == "pdf" {
                 view! { <PdfIcon /> }.into_any()
             } else if file_ext == "txt" {
@@ -22,7 +23,8 @@ pub fn FileInfo(file: UserFile) -> impl IntoView {
                 view! { <MdIcon /> }.into_any()
             } else {
                 view! { <span></span> }.into_any()
-            }} <p>{file.full_name}</p>
+            }}
+            <p>{name.clone()}</p>
         </div>
     }
 }
